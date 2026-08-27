@@ -5,8 +5,8 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 ## Playable now
 
 - Fast eight-kart races with three laps and live position tracking
-- Progressive assisted steering with edge recovery, responsive braking and soft kart contact
-- Stable hold-to-drift handling with a charged release boost
+- Directional kart steering with camera-follow yaw, speed-sensitive turn authority and road-edge recovery
+- Reverse gear, drift-hop initiation, stable drift arcs, charged release boosts and perfect launches
 - Green boost pads and floating Pump item boxes
 - Six crypto power-ups: Green Candle, Pump Rocket, Diamond Hands, Rug Pull, MEV Zap and Airdrop
 - Three distinct tracks: Pump Park, Bonding Beach and Moon Market
@@ -17,6 +17,9 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 - Race UI with standings, timer, item slot, map, lap counter and speed/boost display
 - Keyboard and mobile touch controls
 - Local two-player split-screen races
+- Live Colyseus matchmaking, private room codes, track voting, ready states and host migration
+- Authoritative server simulation for input, laps, items, boosts, collisions and finish order
+- Eight-kart online grids with AI fill and a 20-second reconnection window
 
 ## Controls
 
@@ -33,6 +36,8 @@ python3 -m http.server 5178 --bind 0.0.0.0
 
 Then open <http://localhost:5178>.
 
+Run the multiplayer service separately from `server/` with `npm start`; the web client automatically uses `ws://127.0.0.1:2567` on localhost and the Fly WebSocket service in production.
+
 ## Scope
 
-This is a playable local arcade build. Local multiplayer is real; online matchmaking is not represented as live. No wallet, token, or mainnet actions are included.
+This is a playable arcade build with real local and online multiplayer. No wallet, token, or mainnet actions are included.
