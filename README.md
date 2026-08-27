@@ -5,12 +5,15 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 ## Playable now
 
 - Fast eight-kart races with three laps and live position tracking
-- Responsive acceleration, braking, road-edge slowdown and soft kart contact
-- Hold-to-drift handling with a charged release boost
+- Progressive assisted steering with edge recovery, responsive braking and soft kart contact
+- Stable hold-to-drift handling with a charged release boost
 - Green boost pads and floating Pump item boxes
 - Six crypto power-ups: Green Candle, Pump Rocket, Diamond Hands, Rug Pull, MEV Zap and Airdrop
 - Three distinct tracks: Pump Park, Bonding Beach and Moon Market
-- Cartoon 3D karts, Pump characters, branded barriers/signage, trees, hills, buildings and track props
+- Detailed 3D karts with sidepods, fenders, rims, spoilers, exhausts and Pump branding
+- Distinct Pump racers including Whale, Ape, Dev, Bot, Diamond Hands, Chad and Jeet silhouettes
+- Track-specific worlds: Pump Park grandstands/city, Bonding Beach water/surf props, Moon Market craters/candles/stars
+- Layered engine audio, tire scrub, boost airflow, impact synthesis and sampled boost/item effects
 - Race UI with standings, timer, item slot, map, lap counter and speed/boost display
 - Keyboard and mobile touch controls
 - Local two-player split-screen races
