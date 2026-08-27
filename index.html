@@ -109,6 +109,37 @@
       font-size: 40px; z-index: 8; opacity: 0; pointer-events: none; text-shadow: 0 2px 0 #16301c;
     }
     .note { font-size: 7px; color: #b6e8c0; opacity: .9; margin-top: 10px; line-height: 1.7; }
+    /* Loading screen */
+    #loader {
+      position: fixed; inset: 0; z-index: 999;
+      background: radial-gradient(circle at 50% 40%, #173a22, #0a1c10 70%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-family: "Press Start 2P", monospace; color: #fff; transition: opacity .5s;
+    }
+    #loader.hide { opacity: 0; pointer-events: none; }
+    #loader .logo { font-size: clamp(20px, 5vw, 42px); color: #7CFF6B; letter-spacing: 2px; text-shadow: 3px 3px 0 #16301c; animation: pulselogo 1.8s ease-in-out infinite; }
+    #loader .sub { font-size: 8px; color: #e8f8ea; margin: 12px 0 24px; letter-spacing: 2px; }
+    #loader .bar { width: min(320px, 72vw); height: 14px; background: #16301c; border: 3px solid #e8f4ea; box-shadow: 3px 3px 0 #16301c; }
+    #loader .fill { height: 100%; width: 0%; background: #7CFF6B; }
+    #loader .hint { font-size: 7px; color: #b6e8c0; margin-top: 16px; letter-spacing: 1px; opacity: .7; }
+    @keyframes pulselogo { 50% { transform: scale(.96); opacity: .85; } }
+    /* How-to-play popup */
+    #tutorial {
+      position: fixed; inset: 0; z-index: 200; display: none;
+      align-items: center; justify-content: center; background: rgba(10,28,16,.78);
+      font-family: "Press Start 2P", monospace; color: #fff; padding: 20px;
+    }
+    #tutorial.show { display: flex; }
+    #tutorial .box {
+      max-width: 600px; width: 100%; background: rgba(10,28,16,.96); border: 3px solid #7CFF6B;
+      padding: 26px 24px; box-shadow: 8px 8px 0 #16301c; text-align: left;
+    }
+    #tutorial h2 { color: #7CFF6B; font-size: 16px; margin: 0 0 16px; letter-spacing: 1px; text-align: center; }
+    #tutorial .row { display: flex; gap: 12px; align-items: center; margin: 10px 0; font-size: 9px; line-height: 1.6; }
+    #tutorial .k { background: #e8f4ea; color: #16301c; padding: 8px 10px; font-size: 8px; min-width: 72px; text-align: center; border: 2px solid #16301c; flex-shrink: 0; }
+    #tutorial .tip { color: #b6e8c0; font-size: 8px; margin-top: 14px; }
+    #tutorial .start { width: 100%; margin-top: 18px; font-family: "Press Start 2P"; font-size: 12px; padding: 14px; background: #7CFF6B; color: #16301c; border: 3px solid #16301c; box-shadow: 4px 4px 0 #16301c; cursor: pointer; }
+    #tutorial .start:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #16301c; }
     @keyframes blink { 50% { opacity: 0; } }
     @media (max-width: 820px), (pointer: coarse) {
       #touch { display: block; }
@@ -146,6 +177,25 @@
   <div id="overlay"></div>
   <div id="dock"></div>
   <div id="hub"></div>
+  <div id="tutorial">
+    <div class="box">
+      <h2>HOW TO PLAY</h2>
+      <div class="row"><div class="k">WASD / ARROWS</div><div>Steer · accelerate · brake</div></div>
+      <div class="row"><div class="k">SHIFT / SPACE</div><div>Nitro boost — build it by driving clean</div></div>
+      <div class="row"><div class="k">X</div><div>Drift around corners — skim smoke, leave skids</div></div>
+      <div class="row"><div class="k">C</div><div>Horn</div></div>
+      <div class="row"><div class="k">1 – 4</div><div>Emotes &amp; reactions</div></div>
+      <div class="row"><div class="k">MOBILE</div><div>On-screen GAS / BRK / steer / NITRO / DRIFT / HORN</div></div>
+      <div class="tip">Race 3 laps. Boost pads &amp; pickups give nitro. Dodge the moving barriers &amp; don't dump your position on the last corner. Hit RACE AGAIN for an instant rematch — win streaks rile up your rivals. 🏁</div>
+      <button class="start" id="tutorialGo">LET'S RACE</button>
+    </div>
+  </div>
+  <div id="loader">
+    <div class="logo">PUMP CIRCUIT</div>
+    <div class="sub">DEGEN GRAND PRIX</div>
+    <div class="bar"><div class="fill" id="loadfill"></div></div>
+    <div class="hint" id="loadhint">LOADING CITY FAN ...</div>
+  </div>
   <div id="touch">
     <div class="btn left" data-k="left">◀</div>
     <div class="btn right" data-k="right">▶</div>
@@ -183,6 +233,7 @@
     { body: "#f472b6", stripe: "#fff", glass: "#401828" },
   ];
   const EMOJIS = ["🚀","🔥","💎","😤","💀","🫳","📈","🧠","🎉","🐸"];
+  const TENT_COLS = ["#1f8a4c", "#2d6bff", "#a855f7", "#fb923c", "#e23b3b", "#129aa8"];
   const RIVALS_POOL = ["JEET","WHALE","DEV","BOT","ANON","SER","APE","MOON","RUG","LSD","SUP","CTO","GC","GM","WGMI","SELL","BUY","HOLD"];
   const INSULTS = ["💩","💀","😭","🐌","🤡","📉","🫠","😵","🥴","😱"];
   const PRAISE = ["🐐","🔥","👑","💎","🫡","🎯","🏆","😤","📈","🥇"];
@@ -469,9 +520,172 @@
     g.fillRect(x + 3, y - h - 8, 2, h + 14);
   }
 
+  // ==========================================================
+  // ENVIRONMENT PLACEMENT ENGINE
+  // Guarantees: props never overlap each other OR the track.
+  // ==========================================================
+  const CLAIMS = []; // axis-aligned rects {x,y,w,h}
+  function clearOfRect(x, y, w, h) {
+    // no overlap with a prior claim
+    for (const c of CLAIMS) {
+      if (x < c.x + c.w && x + w > c.x && y < c.y + c.h && y + h > c.y) return false;
+    }
+    return true;
+  }
+  // Track clearance: never sit ON the asphalt, and keep the center at least a small gap off it.
+  // sample points must stay >= HALF+6 (clear of the road); center must be > HALF+14 so props hug the edge without blocking traffic.
+  function clearOfTrack(x, y, w, h, margin) {
+    margin = margin === undefined ? 14 : margin;
+    const cx = x + w / 2, cy = y + h / 2;
+    // center must be off the road by at least the margin
+    if (cx < 0 || cy < 0 || cx > WORLD_W || cy > WORLD_H) return false;
+    if (nearest(cx, cy).d < T.HALF + margin) return false;
+    // no sample point may sit on the asphalt
+    const pts = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]];
+    for (const [px, py] of pts) {
+      if (px < 0 || py < 0 || px > WORLD_W || py > WORLD_H) return false;
+      if (nearest(px, py).d < T.HALF + 6) return false;
+    }
+    return true;
+  }
+  function claim(x, y, w, h) { CLAIMS.push({ x, y, w, h }); }
+  // Try to place an AABB at center (cx,cy) with size (w,h). Bounds-clamped.
+  function place(cx, cy, w, h, margin) {
+    let x = Math.round(cx - w / 2), y = Math.round(cy - h / 2);
+    x = Math.max(6, Math.min(WORLD_W - w - 6, x));
+    y = Math.max(6, Math.min(WORLD_H - h - 6, y));
+    if (!clearOfRect(x, y, w, h)) return null;
+    if (!clearOfTrack(x, y, w, h, margin)) return null;
+    claim(x, y, w, h);
+    return { x, y, w, h };
+  }
+  // Place a small prop with a small bbox; expands with optional padding.
+  function placeSmall(cx, cy, size, margin) {
+    return place(cx, cy, size, size, margin);
+  }
+
+  // ---- New prop painters ----
+  function tree(g, x, y, r) {
+    g.fillStyle = "#6b4a2b"; g.fillRect(x - 3, y - 2, 6, 7);
+    g.fillStyle = "#1f7a40"; g.beginPath(); g.arc(x, y - 12, r, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#2f9a52"; g.beginPath(); g.arc(x - r * 0.3, y - r * 0.2 - 8, r * 0.62, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#3cb45e"; g.beginPath(); g.arc(x + r * 0.22, y - r * 0.1 - 8, r * 0.4, 0, Math.PI * 2); g.fill();
+  }
+  function bigTree(g, x, y, r) {
+    tree(g, x, y, r * 1.4);
+    g.fillStyle = "#1f7a40"; g.beginPath(); g.arc(x + r * 0.7, y + r * 0.5, r * 0.5, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#2f9a52"; g.beginPath(); g.arc(x + r * 0.75, y + r * 0.42, r * 0.32, 0, Math.PI * 2); g.fill();
+  }
+  function grassPatch(g, x, y, w, h) {
+    g.fillStyle = "#7fb968"; g.fillRect(x, y, w, h);
+    g.fillStyle = "#8fd67e"; g.fillRect(x + 3, y + 4, 6, 3); g.fillRect(x + 14, y + 8, 5, 3);
+    g.fillStyle = "#6fae5e"; g.fillRect(x + 20, y + 3, 5, 4);
+  }
+  function fence(g, x, y, w, h) {
+    g.fillStyle = "#6b4a2b"; g.fillRect(x, y, w, h);
+    g.fillStyle = "#5a3d22"; g.fillRect(x, y, w, 3);
+    for (let px = x + 3; px < x + w - 3; px += 9) g.fillStyle = "#5a3d22", g.fillRect(px, y, 2, h);
+  }
+  function flag(g, x, y, col) {
+    g.fillStyle = "#8b9199"; g.fillRect(x, y - 18, 2, 22);
+    g.fillStyle = col; g.beginPath(); g.moveTo(x + 2, y - 18); g.lineTo(x + 18, y - 12); g.lineTo(x + 2, y - 6); g.fill();
+  }
+  function tireStack(g, x, y, n) {
+    for (let i = 0; i < n; i++) {
+      g.fillStyle = "#222"; g.beginPath(); g.arc(x, y - i * 6, 8, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#444"; g.beginPath(); g.arc(x, y - i * 6, 3, 0, Math.PI * 2); g.fill();
+    }
+  }
+  function bollard(g, x, y) { g.fillStyle = "#e8f8ea"; g.fillRect(x - 2, y - 2, 4, 4); g.fillStyle = "#2fce6e"; g.fillRect(x - 2, y - 2, 4, 2); }
+  function lamp(g, x, y) {
+    g.fillStyle = "#8b9199"; g.fillRect(x - 1, y - 20, 2, 22);
+    g.fillStyle = "#fde68a"; g.fillRect(x - 3, y - 20, 7, 5);
+  }
+  function pitTent(g, x, y, w, h, col) {
+    g.fillStyle = "#12100f"; g.fillRect(x - 3, y + h - 4, w + 6, 7);
+    g.fillStyle = col; g.fillRect(x, y, w, h);
+    g.fillStyle = "#0e0d0c"; g.fillRect(x + w / 2 - 8, y + h * 0.4, 16, h * 0.6);
+    g.fillStyle = "#fff"; g.fillRect(x + 5, y + 4, w - 10, 3);
+  }
+  function archGate(g, x, y, col) {
+    // inflatable arch across a gap
+    g.fillStyle = col;
+    g.beginPath();
+    g.arc(x, y, 40, Math.PI, 0);
+    g.fill();
+    g.fillStyle = "#fff";
+    g.fillRect(x - 40, y - 6, 80, 6);
+    g.fillStyle = "#16301c"; g.font = "8px monospace"; g.textAlign = "center";
+    g.fillText("PUMP.FUN", x, y - 28);
+  }
+  function banner(g, x, y, w, h, txt) {
+    g.fillStyle = "#cf3b3b"; g.fillRect(x, y, w, h);
+    g.fillStyle = "#fff"; g.fillRect(x + 2, y + 2, w - 4, h - 4);
+    g.fillStyle = "#20130d"; g.font = "7px monospace"; g.textAlign = "center";
+    g.fillText(txt, x + w / 2, y + h - 5);
+  }
+  function grandstand(g, box, seatCol) {
+    // Raised spectator stand: base, stepped rows of crowd dots, canopy edge.
+    const { x, y, w, h } = box;
+    g.save();
+    // concrete base
+    g.fillStyle = "#9aa0a6"; g.fillRect(x, y, w, h);
+    g.fillStyle = "#b9bec3"; g.fillRect(x, y, w, 5);
+    // gradient steps
+    const rows = 4, rowH = h / rows;
+    for (let r = 0; r < rows; r++) {
+      const ry = y + r * rowH;
+      const shade = 200 - r * 28;
+      g.fillStyle = `rgb(${shade},${shade},${shade})`;
+      g.fillRect(x + 3, ry, w - 6, rowH - 3);
+    }
+    // crowd dots on the steps
+    for (let r = 0; r < rows; r++) {
+      const ry = y + r * rowH + rowH * 0.4;
+      for (let px = x + 8; px < x + w - 6; px += 8) {
+        const cc = ["#e23b3b", "#2d6bff", "#f5c400", "#22c55e", "#a855f7", "#fb923c", "#f2f4f0"][((px * 7 + (r + 1) * 5) | 0) % 7];
+        g.fillStyle = cc;
+        g.fillRect(px, ry, 4, 5);
+        g.fillStyle = "#16301c"; g.fillRect(px + 1, ry + 1, 2, 2); // head
+      }
+    }
+    // canopy / roof pillar
+    g.fillStyle = "#1f8a4c"; g.fillRect(x + 4, y - 4, w - 8, 5);
+    g.fillStyle = "#2fce6e"; g.fillRect(x + 4, y - 4, w - 8, 2);
+    g.restore();
+  }
+
+  // ---- Grandstand positions along the track ----
+  let grandstands = []; // {x,y,w,h, side} — used to anchor visible crowd dots
+  function planGrandstands() {
+    grandstands = [];
+    // Well-spaced spots biased toward open straights. Each is pushed OUT, and we try a
+    // couple of distances so a stand finds a clear spot (no overlap, no track contact).
+    // Footprint is ~ a long bar laid along the track so the crowd faces the racing line.
+    const spots = [
+      [0.02, 1], [0.135, -1], [0.26, 1], [0.415, -1], [0.55, 1], [0.685, -1], [0.80, 1], [0.935, -1],
+    ];
+    for (const [t, side] of spots) {
+      const i = Math.floor(t * T.PN) % T.PN;
+      const tx = T.TANG[i][0], ty = T.TANG[i][1];
+      const nx = ty * side, ny = -tx * side;   // outward normal
+      // Try distances from close to far; first clear wins.
+      for (const dist of [46, 58, 70, 82]) {
+        const cx = T.PATH[i][0] + nx * (T.HALF + dist);
+        const cy = T.PATH[i][1] + ny * (T.HALF + dist);
+        const w = 84, h = 40;
+        const placed = place(cx, cy, w, h, 12);
+        if (placed) { grandstands.push({ x: placed.x, y: placed.y, w, h, side }); break; }
+      }
+    }
+  }
+
+  // ---- Build world scenery ----
   function seedWorld() {
     world = document.createElement("canvas");
     world.width = WORLD_W; world.height = WORLD_H;
+    CLAIMS.length = 0; // reset placement claims for this track
+    grandstands = [];
     const g = world.getContext("2d");
     g.imageSmoothingEnabled = false;
     const grass = ["#9ee08c", "#8fd67e", "#84cc74", "#97dc86", "#7fc86f"];
@@ -532,59 +746,142 @@
       }
       g.stroke(); g.globalAlpha = 1;
     }
+    // ==========================================================
+    // DENSE, NON-OVERLAPPING SURROUNDINGS
+    // ==========================================================
     function offTrack(i, side, dist) { const tx = T.TANG[i][0], ty = T.TANG[i][1]; return [T.PATH[i][0] + ty * side * (T.HALF + dist), T.PATH[i][1] - tx * side * (T.HALF + dist)]; }
     function trackAng(i) { return Math.atan2(T.TANG[i][1], T.TANG[i][0]); }
-    [[T.START_I + 12, 1, 46], [90, -1, 48], [160, 1, 44], [230, -1, 50], [300, 1, 46], [400, -1, 48]].forEach(([i, side, d]) => {
-      const p = offTrack(i % T.PN, side, d); drawPumpBox(g, p[0] - 34, p[1] - 42, 68, 84);
-    });
-    const signSpecs = [[T.START_I + 28, 1, 40, "PUMP.FUN"], [70, -1, 42, "1000x"], [140, 1, 40, "LAUNCH"], [200, -1, 42, "BONDING"], [280, 1, 40, "DUMP"], [360, -1, 42, "LP POOL"]];
-    for (const [i, side, d, lab] of signSpecs) {
-      const p = offTrack(i % T.PN, side, d);
-      g.save(); g.translate(p[0], p[1]); g.rotate(trackAng(i % T.PN) + (side > 0 ? 0.15 : -0.15));
-      g.fillStyle = "#1f8a4c"; g.fillRect(-50, -15, 100, 30);
-      g.strokeStyle = "#7CFF6B"; g.lineWidth = 2; g.strokeRect(-50, -15, 100, 30);
-      g.fillStyle = "#e8ffe8"; g.font = "9px monospace"; g.textAlign = "center"; g.fillText(lab, 0, 4);
-      g.restore();
+
+    // 1) Grandstands in the open gaps (fills corners & straights with crowd)
+    planGrandstands();
+    for (const gs of grandstands) grandstand(g, gs, null);
+
+    // 2) Scatter a dense-but-clear ring of scenery hugging the track edge.
+    //    Try many candidate indices/sides; only place where the claim is free.
+    const TREE_COLS = ["#b93b3b", "#f5c400", "#22c55e", "#2d6bff", "#fff", "#fb923c", "#54b89b"];
+    const FLAG_COLS = ["#2fce6e", "#f5c400", "#ef4444", "#67e8f9"];
+    for (let i = 0; i < T.PN; i += 4) {
+      const side = (i / 4) % 2 ? 1 : -1;
+      const dist = 34 + ((i * 5) % 22);
+      const p = offTrack(i, side, dist);
+      // Trees + bushes (small claimed bbox, generous track margin)
+      if (i % 16 === 0) { const pl = placeSmall(p[0], p[1], 22, 24); if (pl) tree(g, pl.x + pl.w / 2, pl.y + pl.h / 2, 10); }
+      else if (i % 10 === 3) { const pl = placeSmall(p[0], p[1], 18, 24); if (pl) bush(g, pl.x + pl.w / 2, pl.y + pl.h / 2, 9); }
+      // Fences / barriers along the inner edge (only where no stand claimed)
+      else if (i % 9 === 4) { const pl = place(p[0], p[1], 46, 8, 20); if (pl) fence(g, pl.x, pl.y, pl.w, pl.h); }
+      // Flags
+      else if (i % 12 === 7) { const pl = placeSmall(p[0], p[1], 12, 22); if (pl) flag(g, pl.x + pl.w / 2, pl.y + pl.h, FLAG_COLS[(i / 12 | 0) % FLAG_COLS.length]); }
+      // Tire stacks / bollards
+      else if (i % 14 === 5) { const pl = placeSmall(p[0], p[1], 16, 22); if (pl) tireStack(g, pl.x + pl.w / 2, pl.y + pl.h / 2, 2); }
+      // Lamps
+      else if (i % 18 === 11) { const pl = placeSmall(p[0], p[1], 12, 22); if (pl) lamp(g, pl.x + pl.w / 2, pl.y + pl.h, 0); }
     }
-    [[T.START_I + 20, 1, 34], [80, -1, 34], [210, 1, 34], [320, -1, 34]].forEach(([i, side, d]) => {
-      const base = offTrack(i % T.PN, side, d); const ang = trackAng(i % T.PN);
-      for (let k = 0; k < 8; k++) candle(g, base[0] + Math.cos(ang) * k * 13, base[1] + Math.sin(ang) * k * 13, k !== 5, 14 + ((k * 5) % 20));
-    });
-    { const p = offTrack(130, 1, 58);
-      g.fillStyle = "#cfd6d0"; g.fillRect(p[0] - 20, p[1] + 20, 70, 14);
-      g.fillStyle = "#ececec"; g.beginPath(); g.moveTo(p[0] + 8, p[1] - 60); g.lineTo(p[0] + 28, p[1] - 60); g.lineTo(p[0] + 36, p[1] + 20); g.lineTo(p[0], p[1] + 20); g.fill();
-      g.fillStyle = "#2fce6e"; g.fillRect(p[0] + 12, p[1] - 36, 12, 20);
-      g.fillStyle = "#ef4444"; g.beginPath(); g.moveTo(p[0], p[1] + 20); g.lineTo(p[0] - 10, p[1] + 38); g.lineTo(p[0] + 16, p[1] + 20); g.fill();
-      g.beginPath(); g.moveTo(p[0] + 36, p[1] + 20); g.lineTo(p[0] + 46, p[1] + 38); g.lineTo(p[0] + 20, p[1] + 20); g.fill();
+
+    // 3) Infill open areas (infield + outer corners) with buildings / tents / big trees /
+    //    liquidity pools — deliberately not touching the claimed track ring.
+    //    We scan a coarse grid and drop a prop into any clear cell.
+    const GRID = 54;
+    for (let gy = GRID; gy < WORLD_H - GRID; gy += GRID) {
+      for (let gx = GRID; gx < WORLD_W - GRID; gx += GRID) {
+        const cx = gx + ((hash(gx, gy) - 0.5) * 30);
+        const cy = gy + ((hash(gx * 3, gy * 5) - 0.5) * 30);
+        const n = nearest(cx, cy).d;
+        // Skip anything near the track
+        if (n < T.HALF + 46) continue;
+        const par = hash(gx * 7, gy * 11);
+        let pl;
+        if (par < 0.14) { pl = place(cx, cy, 42, 34, 20); if (pl) tree(g, pl.x + 21, pl.y + 20, 12); }
+        else if (par < 0.24) { pl = place(cx, cy, 40, 40, 20); if (pl) grassPatch(g, pl.x, pl.y, pl.w, pl.h); }
+        else if (par < 0.36) { pl = placeSmall(cx, cy, 20, 20); if (pl) bush(g, cx, cy, 10); }
+        else if (par < 0.46) { pl = place(cx, cy, 54, 30, 20); if (pl) pitTent(g, pl.x, pl.y, pl.w, pl.h, TENT_COLS[(hash(gx, gy * 9) * TENT_COLS.length) | 0]); }
+        else if (par < 0.52) { pl = place(cx, cy, 40, 22, 20); if (pl) tireStack(g, cx, cy, 3); }
+        else if (par < 0.58) { pl = place(cx, cy, 60, 20, 20); if (pl) banner(g, pl.x, pl.y, pl.w, pl.h, ["1000X", "NEXT", "MOON", "GM", "WAGMI", "PUMP"][(hash(gx, gy * 3) * 6) | 0]); }
+      }
     }
-    { const p = offTrack(200, -1, 52);
-      g.strokeStyle = "#16301c"; g.lineWidth = 3; g.beginPath();
-      for (let k = 0; k < 36; k++) { const t = k / 35; const x = p[0] + k * 5; const y = p[1] + 50 * Math.pow(1 - t, 2) - 20; if (k === 0) g.moveTo(x, y); else g.lineTo(x, y); }
-      g.stroke(); g.fillStyle = "#2fce6e"; g.fillRect(p[0] + 168, p[1] - 22, 8, 8);
+
+    // 4) Signature scene pieces (explicit, carefully placed away from track)
+    // Rockets (launchpad vibe)
+    for (const [t, side] of [[0.28, 1], [0.66, -1], [0.90, 1]]) {
+      const i = Math.floor(t * T.PN) % T.PN; const p = offTrack(i, side, 62);
+      const pl = place(p[0], p[1], 74, 96, 26);
+      if (!pl) break;
+      const rx = pl.x, ry = pl.y;
+      g.fillStyle = "#cfd6d0"; g.fillRect(rx - 20, ry + 20, 70, 14);
+      g.fillStyle = "#ececec"; g.beginPath();
+      g.moveTo(rx + 8, ry - 60); g.lineTo(rx + 28, ry - 60); g.lineTo(rx + 36, ry + 20); g.lineTo(rx, ry + 20); g.fill();
+      g.fillStyle = "#2fce6e"; g.fillRect(rx + 12, ry - 36, 12, 20);
+      g.fillStyle = "#ef4444"; g.beginPath(); g.moveTo(rx, ry + 20); g.lineTo(rx - 10, ry + 38); g.lineTo(rx + 16, ry + 20); g.fill();
+      g.beginPath(); g.moveTo(rx + 36, ry + 20); g.lineTo(rx + 46, ry + 38); g.lineTo(rx + 20, ry + 20); g.fill();
     }
-    { const p = offTrack(360, 1, 56);
-      g.fillStyle = "#2dd4bf"; g.beginPath(); g.ellipse(p[0], p[1], 56, 28, 0.2, 0, Math.PI * 2); g.fill();
-      g.fillStyle = "#99f6e4"; g.beginPath(); g.ellipse(p[0] - 10, p[1] - 6, 22, 10, 0.2, 0, Math.PI * 2); g.fill();
+    // Bonding curve sculpture + liquidity pools
+    {
+      const i = Math.floor(0.44 * T.PN) % T.PN; const p = offTrack(i, -1, 56);
+      const pl = place(p[0], p[1], 130, 44, 26);
+      if (pl) {
+        const px = pl.x, py = pl.y;
+        g.strokeStyle = "#16301c"; g.lineWidth = 3; g.beginPath();
+        for (let k = 0; k < 36; k++) { const t = k / 35; const x = px + k * 3; const y = py + 48 * Math.pow(1 - t, 2) - 30; if (k === 0) g.moveTo(x, y); else g.lineTo(x, y); }
+        g.stroke(); g.fillStyle = "#2fce6e"; g.fillRect(px + 122, py - 30, 8, 8);
+      }
     }
-    for (let i = 0; i < T.PN; i += 18) { const side = (i / 18) % 2 ? 1 : -1; const p = offTrack(i, side, 36 + (i % 7)); bush(g, p[0], p[1], 18 + (i % 10)); }
-    for (let i = 6; i < T.PN; i += 22) { const side = (i / 22) % 2 ? -1 : 1; const p = offTrack(i, side, 28); drawPill(g, p[0], p[1], (i * 0.2) % 2, true); }
-    { const p = offTrack(T.START_I - 8, 1, 26); for (let i = 0; i < 3; i++) { g.fillStyle = "#222"; g.beginPath(); g.arc(p[0], p[1] - i * 8, 8, 0, Math.PI * 2); g.fill(); g.fillStyle = "#444"; g.beginPath(); g.arc(p[0], p[1] - i * 8, 3, 0, Math.PI * 2); g.fill(); } }
+    for (const [t, side] of [[0.16, 1], [0.58, 1], [0.88, 1]]) {
+      const i = Math.floor(t * T.PN) % T.PN; const p = offTrack(i, side, 58);
+      const pl = place(p[0], p[1], 108, 50, 26);
+      if (pl) {
+        const px = pl.x, py = pl.y;
+        g.fillStyle = "#2dd4bf"; g.beginPath(); g.ellipse(px + 54, py + 26, 52, 24, 0.2, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#99f6e4"; g.beginPath(); g.ellipse(px + 44, py + 20, 22, 10, 0.2, 0, Math.PI * 2); g.fill();
+      }
+    }
+    // Pump machines in the paddock
+    const pumpSpots = [[0.05, 1], [0.18, -1], [0.38, 1], [0.60, -1], [0.74, 1], [0.86, -1], [0.97, 1]];
+    for (const [t, side] of pumpSpots) {
+      const i = Math.floor(t * T.PN) % T.PN; const p = offTrack(i, side, 48);
+      const pl = place(p[0], p[1], 68, 84, 24);
+      if (pl) drawPumpBox(g, pl.x, pl.y, 68, 84);
+    }
+    // Start-line finishing arch over the grid
+    {
+      const si = T.START_I; const p = T.PATH[si];
+      const pl = place(p[0], p[1] - 30, 96, 26, 40);
+      if (pl) archGate(g, pl.x + pl.w / 2, pl.y + pl.h, "#2fce6e");
+    }
   }
 
   // ---- Spectators ----
   let spectators = [];
+  function inStand(x, y) {
+    for (const gs of grandstands) {
+      if (x >= gs.x - 2 && x <= gs.x + gs.w + 2 && y >= gs.y - 2 && y <= gs.y + gs.h + 2) return true;
+    }
+    return false;
+  }
   function spawnSpectators() {
     spectators = [];
+    // Base edge crowd in the gaps between stands (never on a stand AABB)
     for (let i = 4; i < T.PN; i += 14) {
       const side = (i / 14) % 2 ? 1 : -1;
       const tx = T.TANG[i][0], ty = T.TANG[i][1];
       const sx = T.PATH[i][0] + ty * side * (T.HALF + 22);
       const sy = T.PATH[i][1] - tx * side * (T.HALF + 22);
+      if (inStand(sx, sy)) continue;
       const n = 4 + (i % 5);
-      for (let k = 0; k < n; k++) spectators.push({
-        x: sx + (k % 4) * 10 - 12 + ((k * 7) % 4), y: sy + Math.floor(k / 4) * 11 + ((k * 3) % 3),
-        hat: k % 3 === 0, bounce: 0, sway: Math.random() * 10, hold: k % 5 === 2 ? EMOJIS[k % EMOJIS.length] : (k % 7 === 4 ? "👏" : null),
-      });
+      for (let k = 0; k < n; k++) {
+        const px = sx + (k % 4) * 10 - 12 + ((k * 7) % 4);
+        const py = sy + Math.floor(k / 4) * 11 + ((k * 3) % 3);
+        if (inStand(px, py)) continue;
+        spectators.push({
+          x: px, y: py,
+          hat: k % 3 === 0, bounce: 0, sway: Math.random() * 10, hold: k % 5 === 2 ? EMOJIS[k % EMOJIS.length] : (k % 7 === 4 ? "👏" : null),
+        });
+      }
+    }
+    // Crowd rows right at each grandstand front (the stand body already has dots; these are the animated edge fans)
+    for (const gs of grandstands) {
+      const frontY = gs.y + gs.h + 4;
+      for (let px = gs.x + 6; px < gs.x + gs.w - 6; px += 9) {
+        spectators.push({ x: px, y: frontY + ((px * 3) % 4), hat: (px / 9 | 0) % 3 === 0, bounce: 0, sway: Math.random() * 10, hold: null });
+      }
     }
   }
 
@@ -1659,6 +1956,40 @@
     resetRace();
     showHub();
     requestAnimationFrame(frame);
+    runLoading();
+  }
+  // 5-second loading screen, then a how-to-play popup, then the hub.
+  function runLoading() {
+    const loader = document.getElementById("loader");
+    const fill = document.getElementById("loadfill");
+    const hint = document.getElementById("loadhint");
+    const tut = document.getElementById("tutorial");
+    const hints = [
+      "LOADING CITY FAN ...", "PUMPING THE CURVE ...", "GREASING THE CANDLES ...",
+      "RINSING THE LIQUIDITY ...", "WAKING THE DEGENS ...", "GRID READY ...",
+    ];
+    const total = 5000; // 5s
+    const t0 = performance.now();
+    let hi = 0;
+    let iv = setInterval(() => {
+      if (hint) hint.textContent = hints[hi % hints.length];
+      hi++;
+    }, 830);
+    function tick(now) {
+      const t = Math.min(1, (now - t0) / total);
+      if (fill) fill.style.width = (t * 100).toFixed(1) + "%";
+      if (t < 1) { requestAnimationFrame(tick); return; }
+      clearInterval(iv);
+      if (loader) loader.classList.add("hide");
+      setTimeout(() => { if (tut) tut.classList.add("show"); }, 450);
+    }
+    requestAnimationFrame(tick);
+    // Tutorial continue → hub (already shown behind loader, then hub revealed)
+    const go = document.getElementById("tutorialGo");
+    if (go) go.onclick = () => {
+      if (tut) tut.classList.remove("show");
+      ensureAudio();
+    };
   }
   boot();
 })();
