@@ -17,14 +17,14 @@
     #hud .pos { position: absolute; top: 16px; left: 16px; font-size: 22px; }
     #hud .map {
       position: absolute; top: 52px; left: 16px; width: 88px; height: 68px;
-      border: 3px solid #fff; background: rgba(20,48,28,.55); box-shadow: 3px 3px 0 #16301c;
+      border: 2px solid rgba(47,206,110,.5); border-radius: 4px; background: rgba(8,20,12,.6); box-shadow: 0 0 8px rgba(47,206,110,.25);
     }
-    #hud .time { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 16px; }
-    #hud .lap { position: absolute; top: 16px; right: 16px; font-size: 14px; }
-    #hud .nitro-wrap { position: absolute; left: 16px; bottom: 16px; width: 170px; }
-    #hud .nitro-lab { font-size: 10px; margin-bottom: 6px; letter-spacing: 2px; }
-    #hud .nitro-bar { height: 12px; background: #16301c; border: 3px solid #e8f4ea; box-shadow: 3px 3px 0 #16301c; }
-    #hud .nitro-fill { height: 100%; background: #7CFF6B; width: 0%; }
+    #hud .time { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 16px; color: #fff; background: rgba(6,18,10,.7); border: 2px solid #2fce6e; border-radius: 4px; padding: 3px 12px; letter-spacing: 2px; }
+    #hud .lap { position: absolute; top: 16px; right: 16px; font-size: 14px; color: #eef4f0; background: rgba(6,18,10,.7); border: 2px solid rgba(47,206,110,.5); border-radius: 4px; padding: 6px 12px; letter-spacing: 1px; }
+    #hud .nitro-wrap { position: absolute; left: 16px; bottom: 16px; width: 180px; }
+    #hud .nitro-lab { font-size: 10px; margin-bottom: 6px; letter-spacing: 2px; color: #9fffc0; text-shadow: 0 0 6px rgba(47,206,110,.6); }
+    #hud .nitro-bar { height: 13px; background: #0a2012; border: 2px solid #1f5a33; border-radius: 6px; box-shadow: 0 0 10px rgba(47,206,110,.35); }
+    #hud .nitro-fill { height: 100%; background: linear-gradient(90deg,#22c55e,#7CFF6B); width: 0%; border-radius: 5px; box-shadow: 0 0 12px rgba(124,255,107,.6); }
     #hud .pos-name { position: absolute; bottom: 44px; left: 16px; font-size: 8px; color: #e8f4ea; letter-spacing: 1px; }
     #hud .mvp, #hud .record { position: absolute; top: 78px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 2px; opacity: 0; white-space: nowrap; transition: opacity .2s; }
     #hud .record { color: #fde68a; }
@@ -41,9 +41,9 @@
     #hud .banner.red { color: #ff4040; }
     #hud .leader {
       position: absolute; top: 44px; right: 16px; font-size: 8px; line-height: 1.8; text-align: right;
-      background: rgba(10,28,16,.35); padding: 6px 8px; border: 1px solid rgba(124,255,107,.35);
+      background: rgba(6,16,10,.62); padding: 8px 10px; border: 1px solid rgba(47,206,110,.4); border-radius: 4px; color: #e8f4ea;
     }
-    #hud .leader .you { color: #7CFF6B; }
+    #hud .leader .you { color: #7CFF6B; text-shadow: 0 0 6px rgba(124,255,107,.6); }
     #hud .leader .ghost { color: #fde68a; }
     #overlay, #hub, #dock {
       position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -168,7 +168,7 @@
     <div class="pos-name" id="posname"></div>
     <div class="leader" id="leaders"></div>
     <div class="nitro-wrap">
-      <div class="nitro-lab">NITRO</div>
+      <div class="nitro-lab">N2O</div>
       <div class="nitro-bar"><div class="nitro-fill" id="nitro"></div></div>
     </div>
     <div class="banner" id="banner">GO!</div>
@@ -306,7 +306,10 @@
       LEFT.push([a[0] - ty * HALF, a[1] + tx * HALF]);
       RIGHT.push([a[0] + ty * HALF, a[1] - tx * HALF]);
     }
-    return { PATH, PN, HALF, LEFT, RIGHT, TANG, CUM, TRACK_LEN, START_I: 36 };
+    // Start line sits where the track heads north (most upward tangent), so the grid faces north.
+    let startI = 0, bestN = 1e9;
+    for (let i = 0; i < PN; i++) { if (TANG[i][1] < bestN) { bestN = TANG[i][1]; startI = i; } }
+    return { PATH, PN, HALF, LEFT, RIGHT, TANG, CUM, TRACK_LEN, START_I: startI };
   }
 
   const TRACKS = [
@@ -560,9 +563,9 @@
     g.fillText("PUMP.FUN", x + w / 2, y + h - 10);
   }
   function bush(g, x, y, r) {
-    g.fillStyle = "#1f7a40"; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#2f9a52"; g.beginPath(); g.arc(x - r * 0.28, y - r * 0.22, r * 0.62, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#3cb45e"; g.beginPath(); g.arc(x + r * 0.2, y - r * 0.1, r * 0.4, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#12331c"; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#174321"; g.beginPath(); g.arc(x - r * 0.28, y - r * 0.22, r * 0.62, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#1e5729"; g.beginPath(); g.arc(x + r * 0.2, y - r * 0.1, r * 0.4, 0, Math.PI * 2); g.fill();
   }
   function candle(g, x, y, up, h) {
     g.fillStyle = up ? "#22c55e" : "#ef4444"; g.fillRect(x, y - h, 8, h);
@@ -615,25 +618,27 @@
 
   // ---- New prop painters ----
   function tree(g, x, y, r) {
-    g.fillStyle = "#6b4a2b"; g.fillRect(x - 3, y - 2, 6, 7);
-    g.fillStyle = "#1f7a40"; g.beginPath(); g.arc(x, y - 12, r, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#2f9a52"; g.beginPath(); g.arc(x - r * 0.3, y - r * 0.2 - 8, r * 0.62, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#3cb45e"; g.beginPath(); g.arc(x + r * 0.22, y - r * 0.1 - 8, r * 0.4, 0, Math.PI * 2); g.fill();
+    // dark jungle palm — layered dark green fronds
+    g.fillStyle = "rgba(47,206,110,0.08)"; g.beginPath(); g.arc(x, y - 10, r * 1.6, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#3a2b1a"; g.fillRect(x - 3, y - 2, 6, 7);
+    g.fillStyle = "#14401f"; g.beginPath(); g.arc(x, y - 12, r, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#1c5a2b"; g.beginPath(); g.arc(x - r * 0.3, y - r * 0.2 - 8, r * 0.62, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#2a7a3c"; g.beginPath(); g.arc(x + r * 0.22, y - r * 0.1 - 8, r * 0.4, 0, Math.PI * 2); g.fill();
   }
   function bigTree(g, x, y, r) {
     tree(g, x, y, r * 1.4);
-    g.fillStyle = "#1f7a40"; g.beginPath(); g.arc(x + r * 0.7, y + r * 0.5, r * 0.5, 0, Math.PI * 2); g.fill();
-    g.fillStyle = "#2f9a52"; g.beginPath(); g.arc(x + r * 0.75, y + r * 0.42, r * 0.32, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#14401f"; g.beginPath(); g.arc(x + r * 0.7, y + r * 0.5, r * 0.5, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#1c5a2b"; g.beginPath(); g.arc(x + r * 0.75, y + r * 0.42, r * 0.32, 0, Math.PI * 2); g.fill();
   }
   function grassPatch(g, x, y, w, h) {
-    g.fillStyle = "#7fb968"; g.fillRect(x, y, w, h);
-    g.fillStyle = "#8fd67e"; g.fillRect(x + 3, y + 4, 6, 3); g.fillRect(x + 14, y + 8, 5, 3);
-    g.fillStyle = "#6fae5e"; g.fillRect(x + 20, y + 3, 5, 4);
+    g.fillStyle = "#1e4a28"; g.fillRect(x, y, w, h);
+    g.fillStyle = "#2a5f35"; g.fillRect(x + 3, y + 4, 6, 3); g.fillRect(x + 14, y + 8, 5, 3);
+    g.fillStyle = "#245230"; g.fillRect(x + 20, y + 3, 5, 4);
   }
   function fence(g, x, y, w, h) {
-    g.fillStyle = "#6b4a2b"; g.fillRect(x, y, w, h);
-    g.fillStyle = "#5a3d22"; g.fillRect(x, y, w, 3);
-    for (let px = x + 3; px < x + w - 3; px += 9) g.fillStyle = "#5a3d22", g.fillRect(px, y, 2, h);
+    g.fillStyle = "#241a10"; g.fillRect(x, y, w, h);
+    g.fillStyle = "#2f2417"; g.fillRect(x, y, w, 3);
+    for (let px = x + 3; px < x + w - 3; px += 9) g.fillStyle = "#2f2417", g.fillRect(px, y, 2, h);
   }
   function flag(g, x, y, col) {
     g.fillStyle = "#8b9199"; g.fillRect(x, y - 18, 2, 22);
@@ -647,14 +652,17 @@
   }
   function bollard(g, x, y) { g.fillStyle = "#e8f8ea"; g.fillRect(x - 2, y - 2, 4, 4); g.fillStyle = "#2fce6e"; g.fillRect(x - 2, y - 2, 4, 2); }
   function lamp(g, x, y) {
-    g.fillStyle = "#8b9199"; g.fillRect(x - 1, y - 20, 2, 22);
-    g.fillStyle = "#fde68a"; g.fillRect(x - 3, y - 20, 7, 5);
+    // green glowing street lamp
+    g.fillStyle = "rgba(47,206,110,0.13)"; g.beginPath(); g.arc(x, y - 12, 26, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#2b3340"; g.fillRect(x - 1, y - 20, 2, 22);
+    g.fillStyle = "#2fce6e"; g.fillRect(x - 3, y - 21, 7, 6);
+    g.fillStyle = "#9fffc0"; g.fillRect(x - 2, y - 20, 4, 3);
   }
   function pitTent(g, x, y, w, h, col) {
-    g.fillStyle = "#12100f"; g.fillRect(x - 3, y + h - 4, w + 6, 7);
+    g.fillStyle = "#0e1210"; g.fillRect(x - 3, y + h - 4, w + 6, 7);
     g.fillStyle = col; g.fillRect(x, y, w, h);
-    g.fillStyle = "#0e0d0c"; g.fillRect(x + w / 2 - 8, y + h * 0.4, 16, h * 0.6);
-    g.fillStyle = "#fff"; g.fillRect(x + 5, y + 4, w - 10, 3);
+    g.fillStyle = "#0a0d0b"; g.fillRect(x + w / 2 - 8, y + h * 0.4, 16, h * 0.6);
+    g.fillStyle = "#cfe8d4"; g.fillRect(x + 5, y + 4, w - 10, 3);
   }
   function archGate(g, x, y, col) {
     // inflatable arch across a gap
@@ -664,42 +672,44 @@
     g.fill();
     g.fillStyle = "#fff";
     g.fillRect(x - 40, y - 6, 80, 6);
-    g.fillStyle = "#16301c"; g.font = "8px monospace"; g.textAlign = "center";
+    g.fillStyle = "#0a3518"; g.font = "8px monospace"; g.textAlign = "center";
     g.fillText("PUMP.FUN", x, y - 28);
   }
   function banner(g, x, y, w, h, txt) {
-    g.fillStyle = "#cf3b3b"; g.fillRect(x, y, w, h);
-    g.fillStyle = "#fff"; g.fillRect(x + 2, y + 2, w - 4, h - 4);
-    g.fillStyle = "#20130d"; g.font = "7px monospace"; g.textAlign = "center";
-    g.fillText(txt, x + w / 2, y + h - 5);
+    // neon green sign on dark backing
+    g.fillStyle = "#0a1a10"; g.fillRect(x, y, w, h);
+    g.fillStyle = "rgba(47,206,110,0.20)"; g.fillRect(x + 2, y + 2, w - 4, h - 4);
+    g.fillStyle = "#2fce6e"; g.font = "8px monospace"; g.textAlign = "center";
+    g.fillText(txt, x + w / 2, y + h - 6);
+    g.fillStyle = "rgba(47,206,110,0.5)"; g.fillRect(x - 2, y, 2, h); g.fillRect(x + w, y, 2, h);
   }
   function grandstand(g, box, seatCol) {
-    // Raised spectator stand: base, stepped rows of crowd dots, canopy edge.
+    // Dark raised spectator stand with neon-lit crowd dots.
     const { x, y, w, h } = box;
     g.save();
-    // concrete base
-    g.fillStyle = "#9aa0a6"; g.fillRect(x, y, w, h);
-    g.fillStyle = "#b9bec3"; g.fillRect(x, y, w, 5);
-    // gradient steps
+    // dark concrete base
+    g.fillStyle = "#232b26"; g.fillRect(x, y, w, h);
+    g.fillStyle = "#2c352f"; g.fillRect(x, y, w, 5);
+    // gradient steps (dark)
     const rows = 4, rowH = h / rows;
     for (let r = 0; r < rows; r++) {
       const ry = y + r * rowH;
-      const shade = 200 - r * 28;
-      g.fillStyle = `rgb(${shade},${shade},${shade})`;
+      const shade = 52 - r * 8;
+      g.fillStyle = `rgb(${shade},${shade + 10},${shade + 4})`;
       g.fillRect(x + 3, ry, w - 6, rowH - 3);
     }
-    // crowd dots on the steps
+    // crowd dots on the steps (mixed neon)
     for (let r = 0; r < rows; r++) {
       const ry = y + r * rowH + rowH * 0.4;
       for (let px = x + 8; px < x + w - 6; px += 8) {
-        const cc = ["#e23b3b", "#2d6bff", "#f5c400", "#22c55e", "#a855f7", "#fb923c", "#f2f4f0"][((px * 7 + (r + 1) * 5) | 0) % 7];
+        const cc = ["#e23b3b", "#2d6bff", "#f5c400", "#2fce6e", "#a855f7", "#fb923c", "#eef4f0"][((px * 7 + (r + 1) * 5) | 0) % 7];
         g.fillStyle = cc;
         g.fillRect(px, ry, 4, 5);
-        g.fillStyle = "#16301c"; g.fillRect(px + 1, ry + 1, 2, 2); // head
+        g.fillStyle = "rgba(255,255,255,0.7)"; g.fillRect(px + 1, ry + 1, 1, 1);
       }
     }
-    // canopy / roof pillar
-    g.fillStyle = "#1f8a4c"; g.fillRect(x + 4, y - 4, w - 8, 5);
+    // neon canopy / roof pillar
+    g.fillStyle = "#10241a"; g.fillRect(x + 4, y - 4, w - 8, 5);
     g.fillStyle = "#2fce6e"; g.fillRect(x + 4, y - 4, w - 8, 2);
     g.restore();
   }
@@ -738,27 +748,29 @@
     const g = world.getContext("2d");
     g.imageSmoothingEnabled = false;
     const theme = T.theme || {};
-    const grass = theme.grass || ["#9ee08c", "#8fd67e", "#84cc74", "#97dc86", "#7fc86f"];
-    const curbA = theme.curb || "#2fce6e";
-    const curbB = theme.curb2 || "#f4f7f4";
+    // Dark jungle moss palette (reference look)
+    const grass = ["#0d2416", "#12301c", "#16381f", "#0f2a17", "#1a3f23"];
+    const curbA = "#2fce6e";
+    const curbB = "#f4f7f4";
     for (let y = 0; y < WORLD_H; y += 6) for (let x = 0; x < WORLD_W; x += 6) {
       const n = hash(x, y); g.fillStyle = grass[(n * 5) | 0]; g.fillRect(x, y, 6, 6);
     }
+    // speckle light on the moss
     for (let i = 0; i < 280; i++) {
       const x = ((i * 197 + 40) % (WORLD_W - 24)) + 12;
       const y = ((i * 311 + 80) % (WORLD_H - 24)) + 12;
       if (nearest(x, y).d < T.HALF + 26) continue;
-      g.fillStyle = i % 4 ? "#fff6d2" : "#d9ffb0"; g.fillRect(x, y, 2, 2);
-      g.fillRect(x + 2, y - 1, 2, 2); g.fillStyle = "#fff"; g.fillRect(x + 1, y + 2, 2, 2);
+      g.fillStyle = i % 4 ? "#1e4a28" : "#2a5f35"; g.fillRect(x, y, 2, 2);
+      g.fillRect(x + 2, y - 1, 2, 2); g.fillStyle = "#1e4a28"; g.fillRect(x + 1, y + 2, 2, 2);
     }
-    // Track
+    // Track (dark asphalt)
     g.beginPath();
     g.moveTo(T.LEFT[0][0], T.LEFT[0][1]);
     for (let i = 1; i < T.PN; i++) g.lineTo(T.LEFT[i][0], T.LEFT[i][1]);
     for (let i = T.PN - 1; i >= 0; i--) g.lineTo(T.RIGHT[i][0], T.RIGHT[i][1]);
-    g.closePath(); g.fillStyle = "#b7bac4"; g.fill();
+    g.closePath(); g.fillStyle = "#333844"; g.fill();
     g.save(); g.clip();
-    g.fillStyle = "#a8abb6";
+    g.fillStyle = "#2c303a";
     for (let i = 0; i < T.PN; i += 2) { const p = T.PATH[i]; g.fillRect((p[0] | 0) + ((i * 3) % 5) - 2, (p[1] | 0), 3, 2); }
     g.restore();
     // Curbs
@@ -768,8 +780,8 @@
       g.beginPath(); g.moveTo(T.LEFT[i][0], T.LEFT[i][1]); g.lineTo(T.LEFT[(i + 1) % T.PN][0], T.LEFT[(i + 1) % T.PN][1]); g.stroke();
       g.beginPath(); g.moveTo(T.RIGHT[i][0], T.RIGHT[i][1]); g.lineTo(T.RIGHT[(i + 1) % T.PN][0], T.RIGHT[(i + 1) % T.PN][1]); g.stroke();
     }
-    // Rails
-    g.strokeStyle = "#8b9199"; g.lineWidth = 3;
+    // Rails (dark, subtle)
+    g.strokeStyle = "#1a2228"; g.lineWidth = 3;
     const railOff = 11;
     g.beginPath();
     for (let i = 0; i < T.PN; i++) { const x = T.LEFT[i][0] - T.TANG[i][1] * railOff, y = T.LEFT[i][1] + T.TANG[i][0] * railOff; if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); }
@@ -777,8 +789,8 @@
     g.beginPath();
     for (let i = 0; i < T.PN; i++) { const x = T.RIGHT[i][0] + T.TANG[i][1] * railOff, y = T.RIGHT[i][1] - T.TANG[i][0] * railOff; if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); }
     g.closePath(); g.stroke();
-    // Center dashes
-    g.strokeStyle = "#f3f5f4"; g.lineWidth = 2; g.setLineDash([10, 14]);
+    // Center dashes (bright white, reference style)
+    g.strokeStyle = "rgba(255,255,255,0.92)"; g.lineWidth = 2; g.setLineDash([9, 13]);
     g.beginPath(); g.moveTo(T.PATH[0][0], T.PATH[0][1]);
     for (let i = 1; i < T.PN; i++) g.lineTo(T.PATH[i][0], T.PATH[i][1]);
     g.closePath(); g.stroke(); g.setLineDash([]);
@@ -1273,24 +1285,24 @@
       const dx = b.x - a.x, dy = b.y - a.y; const d2 = dx * dx + dy * dy; const rad = 13;
       if (d2 < rad * rad && d2 > 0.1) {
         const d = Math.sqrt(d2); const nx = dx / d, ny = dy / d; const overlap = rad - d;
-        // Gentle positional separation (small max so cars never get bumped far apart).
-        const push = Math.min(overlap, 1.6) * 0.5;
+        // Very gentle positional separation (small cap) so cars only nudge, never fly apart.
+        const push = Math.min(overlap, 0.9) * 0.5;
         a.x -= nx * push; a.y -= ny * push;
         b.x += nx * push; b.y += ny * push;
         const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
         if (rv < 0) {
-          // Gentle, capped impulse: cars nudge each other but never get flung.
-          const imp = Math.max(-85, Math.min(85, rv * 0.22));
+          // Light, capped impulse: a soft nudge, keeps cars close together.
+          const imp = Math.max(-48, Math.min(48, rv * 0.13));
           a.vx -= imp * nx; a.vy -= imp * ny;
           b.vx += imp * nx; b.vy += imp * ny;
-          a.crash = b.crash = 0.03;
+          a.crash = b.crash = 0.02;
           // small visual bounce
-          a.bounceV = -1.5 + Math.random() * 1.5; b.bounceV = -1.5 + Math.random() * 1.5;
-          burst((a.x + b.x) / 2, (a.y + b.y) / 2, "#fff", 4, 60);
+          a.bounceV = -1 + Math.random(); b.bounceV = -1 + Math.random();
+          burst((a.x + b.x) / 2, (a.y + b.y) / 2, "#fff", 3, 45);
           // Shake + crash noise ONLY for the player, and only on a hard hit (not a graze).
           const hard = Math.abs(rv) > 150;
           if ((a.isPlayer || b.isPlayer) && hard) {
-            shake = Math.max(shake, Math.min(8, 2 + Math.abs(rv) * 0.03));
+            shake = Math.max(shake, Math.min(6, 2 + Math.abs(rv) * 0.02));
             beep(180, 0.08, "square", 0.03);
           }
         }
@@ -1372,7 +1384,12 @@
     g.save();
     g.translate(car.x, car.y);
     g.rotate(car.ang);
-    g.fillStyle = "rgba(20,40,20,.28)";
+    // Under-glow + headlight beams (reference night-race look)
+    g.fillStyle = "rgba(47,206,110,0.18)";
+    g.beginPath(); g.ellipse(0, 0, 16, 12, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "rgba(255,255,240,0.10)";
+    g.beginPath(); g.moveTo(8, -5); g.lineTo(30, -9); g.lineTo(30, 9); g.lineTo(8, 5); g.closePath(); g.fill();
+    g.fillStyle = "rgba(20,30,20,.4)";
     g.fillRect(-8, -3, 16, 10);
     g.fillStyle = col.body;
     g.fillRect(-9, -5, 18, 10);
@@ -1445,7 +1462,7 @@
 
   function render() {
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = (T.theme && T.theme.ground) || "#8fd67e";
+    ctx.fillStyle = "#0b2014";   // dark jungle base
     ctx.fillRect(0, 0, IW, IH);
 
     // Camera target
@@ -1515,6 +1532,23 @@
     ctx.globalAlpha = 1;
 
     ctx.restore();
+
+    // ---- Night-jungle atmosphere: darken, add green glow, vignette ----
+    // Dark green/teal wash over the whole scene.
+    ctx.fillStyle = "rgba(4, 24, 12, 0.30)";
+    ctx.fillRect(0, 0, IW, IH);
+    // Soft green bloom around the player (moody pool of green light).
+    const grd = ctx.createRadialGradient(IW / 2, IH / 2, 40, IW / 2, IH / 2, IW * 0.7);
+    grd.addColorStop(0, "rgba(30, 190, 96, 0.10)");
+    grd.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, IW, IH);
+    // Vignette to darken the edges.
+    const vg = ctx.createRadialGradient(IW / 2, IH / 2, IH * 0.35, IW / 2, IH / 2, IW * 0.75);
+    vg.addColorStop(0, "rgba(0,0,0,0)");
+    vg.addColorStop(1, "rgba(0,0,0,0.45)");
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, IW, IH);
 
     updateHUD();
   }
