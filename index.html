@@ -986,11 +986,7 @@
       const i = Math.floor(t * T.PN) % T.PN;
       boostPads.push({ x: T.PATH[i][0] + T.TANG[i][1] * (T.HALF - 20) * -side, y: T.PATH[i][1] - T.TANG[i][0] * (T.HALF - 20) * -side, ang: Math.atan2(T.TANG[i][1], T.TANG[i][0]), t: 0 });
     });
-    // Moving barriers (swing across) near the S
-    [0.34, 0.64].forEach((t) => {
-      const i = Math.floor(t * T.PN) % T.PN;
-      hazards.push({ baseX: T.PATH[i][0], baseY: T.PATH[i][1], phase: Math.random() * 6, ang: Math.atan2(T.TANG[i][1], T.TANG[i][0]), len: T.HALF * 2 - 8, dir: 1, active: true });
-    });
+    // Moving hazards removed — replaced with predictable boost pads & breakables for fun, not chaos.
     // Breakable candles far off-center
     [[0.22, -1], [0.48, 1], [0.78, -1]].forEach(([t, side]) => {
       const i = Math.floor(t * T.PN) % T.PN;
@@ -1026,11 +1022,16 @@
 
   function resetRace() {
     cars = [];
-    const order = Array.from({ length: FIELD }, (_, i) => i).sort(() => Math.random() - 0.5);
+    // Car 0 is ALWAYS the primary player (id 0). The other 7 are AI (ids 1-7).
+    // Random starting-grid positions: shuffle which grid slot each car starts in.
+    const slots = Array.from({ length: FIELD }, (_, i) => i).sort(() => Math.random() - 0.5);
     for (let i = 0; i < FIELD; i++) {
-      const gridIdx = order[i] % FIELD;
-      const c = makeCar(gridIdx, i === 0, i === 1 && twoP);
-      c.gridId = i;
+      const carId = i;                          // logical id: 0 = player, 1..7 = AI
+      const isPlayer = i === 0;
+      const isP2 = (twoP && i === 1);
+      const c = makeCar(carId, isPlayer, isP2);
+      c.gridId = i;                             // identity (not grid position)
+      c.startSlot = slots[i];                   // randomised grid slot for the start line
       cars.push(c);
     }
     if (twoP) cars[1].isPlayer = true;
@@ -1043,6 +1044,19 @@
         c.totalWins = Math.floor(Math.random() * 12);
         c.suffix = c.totalWins >= 5 ? " 💎" : "";
       } else c.name = profile.name;
+    }
+    // Random grid: position each car at its assigned start slot around the start line
+    for (let i = 0; i < FIELD; i++) {
+      const c = cars[i];
+      const slot = c.startSlot;
+      const row = slot % 2 === 0 ? -18 : 18;
+      const back = T.START_I - 4 - Math.floor(slot / 2) * 8;
+      const gi = (back + T.PN) % T.PN;
+      c.x = T.PATH[gi][0] + T.TANG[gi][1] * row + (Math.random() - 0.5) * 8;
+      c.y = T.PATH[gi][1] - T.TANG[gi][0] * row + (Math.random() - 0.5) * 8;
+      c.ang = Math.atan2(T.TANG[gi][1], T.TANG[gi][0]);
+      const n = nearest(c.x, c.y);
+      c.lastProg = n.prog; c.prog = n.prog; c.dist = n.prog;
     }
     particles = []; skidMarks = []; spectateTarget = null;
     speechBubbles = [];
@@ -1065,7 +1079,8 @@
   }
 
   function inputFor(car) {
-    if (car.id === 0) {
+    // P1 = the primary player (the car the camera/HUD follows). Identified by isPlayer flag, NOT id.
+    if (car.isPlayer && !car.isP2) {
       return {
         th: (keys.ArrowUp || keys.KeyW || keys.KeyZ || touches.up) ? 1 : 0,
         br: (keys.ArrowDown || keys.KeyS || touches.down) ? 1 : 0,
@@ -1085,22 +1100,54 @@
     return aiInput(car);
   }
 
+  // Per-car stuck recovery
   function aiInput(car) {
-    const look = Math.max(14, car.aiLook);
-    const idx = (nearest(car.x, car.y).i + look) % T.PN;
-    // Avoid hazards + breakables for AI sloppiness
-    const wobble = Math.sin(raceTime * 1.1 + car.id * 1.7) * 8;
-    const tx = T.PATH[idx][0] - T.TANG[idx][1] * wobble;
-    const ty = T.PATH[idx][1] + T.TANG[idx][0] * wobble;
+    const near = nearest(car.x, car.y);
+    // Distance-based look-ahead: aim at a point ~110px ahead along the track, but pull closer
+    // in tight curves so the AI doesn't overshoot hairpins. This makes AI reliable on all tracks.
+    let ahead = 110;
+    // Warn the AI about sharp curvature ahead so it brakes earlier.
+    let curvature = 0;
+    {
+      const a = near.i, b = (near.i + 8) % T.PN, c = (near.i + 16) % T.PN;
+      const ax = T.TANG[a][0], ay = T.TANG[a][1];
+      const bx = T.TANG[b][0], by = T.TANG[b][1];
+      const cross = Math.abs(ax * by - ay * bx);
+      curvature = cross;
+      if (cross > 0.5) ahead = 60;
+      else if (cross > 0.25) ahead = 85;
+    }
+    // Find target index at the look-ahead distance along the track.
+    let ti = near.i, dist = 0;
+    for (let k = 0; k < T.PN; k++) {
+      const idx = (near.i + k) % T.PN;
+      const nxt = (idx + 1) % T.PN;
+      dist += Math.hypot(T.PATH[nxt][0] - T.PATH[idx][0], T.PATH[nxt][1] - T.PATH[idx][1]);
+      if (dist >= ahead) { ti = nxt; break; }
+      ti = nxt;
+    }
+    const wobble = Math.sin(raceTime * 1.1 + car.id * 1.7) * 7;
+    const tx = T.PATH[ti][0] - T.TANG[ti][1] * wobble;
+    const ty = T.PATH[ti][1] + T.TANG[ti][0] * wobble;
     let err = Math.atan2(ty - car.y, tx - car.x) - car.ang;
     while (err > Math.PI) err -= Math.PI * 2;
     while (err < -Math.PI) err += Math.PI * 2;
-    const st = Math.max(-1, Math.min(1, err * 1.8));
+    const st = Math.max(-1, Math.min(1, err * 2.2));
     const curve = Math.abs(err);
-    const th = curve > 0.9 ? 0.35 : curve > 0.5 ? 0.7 : 1;
+    // Brake hard into tight bends; ease throttle out of them.
+    let th = 1;
+    if (curve > 1.1) th = 0.15;
+    else if (curve > 0.7) th = 0.5;
+    else if (curvature > 0.45 && car.speed > 200) th = 0.55;
+    // Stuck recovery: if barely moving for a moment, reverse out.
+    car.stuck = (car.stuck || 0);
+    if (Math.abs(car.speed) < 22 && raceTime - car.lapStart > 8 && !car.finished) car.stuck += 1;
+    else car.stuck = Math.max(0, car.stuck - 0.5);
+    let reverse = 0;
+    if (car.stuck > 30) { reverse = 1; if (car.stuck > 80) car.stuck = 0; }
     const z = zoneAt(car.prog);
-    const nt = !!(z && (z.kind === "moon" || z.kind === "launch") && car.nitro > 0.2 && curve < 0.45);
-    return { th, br: curve > 1.1 ? 1 : 0, st, nt, dr: curve > 0.65 && car.speed > 160, hn: false };
+    const nt = !!(z && (z.kind === "moon" || z.kind === "launch") && car.nitro > 0.2 && curve < 0.4);
+    return { th: reverse ? 0 : th, br: reverse ? 1 : (curve > 1.3 ? 1 : 0), st: reverse ? -st : st, nt, dr: curve > 0.6 && car.speed > 160, hn: false };
   }
 
   function stepCar(car, dt) {
@@ -1168,13 +1215,16 @@
       car.x = n2.x + nx * wall; car.y = n2.y + ny * wall;
       const vn = car.vx * nx + car.vy * ny;
       if (vn > 0) {
-        car.vx -= vn * 1.35 * nx; car.vy -= vn * 1.35 * ny;
-        car.speed *= 0.8;
-        burst(car.x, car.y, "#ddd", 5, 70);
-        burst(car.x, car.y, "#ffe08a", 4, 60); // sparks when hitting walls
+        // Gentle, energy-absorbing slide along the wall (restitution < 1 so cars DON'T ricochet).
+        // Keep the car moving along the track but remove most of the outward velocity.
+        car.vx -= vn * 0.55 * nx;
+        car.vy -= vn * 0.55 * ny;
+        car.speed *= 0.94;
+        burst(car.x, car.y, "#ddd", 4, 55);
+        burst(car.x, car.y, "#ffe08a", 3, 50); // sparks when hitting walls
         // Shake + crash noise ONLY for the player, and only when the hit is hard.
-        if (car.isPlayer && vn > 130) {
-          shake = Math.max(shake, Math.min(10, 3 + vn * 0.04));
+        if (car.isPlayer && vn > 140) {
+          shake = Math.max(shake, Math.min(7, 2 + vn * 0.025));
           beep(120, 0.08, "square", 0.03);
         }
       }
@@ -1184,29 +1234,6 @@
     for (const pad of boostPads) {
       if ((pad.x - car.x) ** 2 + (pad.y - car.y) ** 2 < 520) {
         car.boostT = 0.6; if (car.isPlayer) beep(900, 0.12, "square", 0.04);
-      }
-    }
-    // Moving barriers
-    for (const hz of hazards) {
-      if (!hz.active) continue;
-      const bx = hz.baseX + Math.cos(raceTime * 1.5 + hz.phase) * (T.HALF - 10) * Math.cos(hz.ang + Math.PI / 2);
-      const by = hz.baseY + Math.cos(raceTime * 1.5 + hz.phase) * (T.HALF - 10) * Math.sin(hz.ang + Math.PI / 2);
-      const hdx = Math.cos(hz.ang) * hz.len / 2, hdy = Math.sin(hz.ang) * hz.len / 2;
-      // point-line segment distance to car
-      const ax = bx - hdx, ay = by - hdy, cx = bx + hdx, cy = by + hdy;
-      const dx = cx - ax, dy = cy - ay; const len2 = dx * dx + dy * dy || 1;
-      let t = ((car.x - ax) * dx + (car.y - ay) * dy) / len2; t = Math.max(0, Math.min(1, t));
-      const px = ax + dx * t, py = ay + dy * t;
-      const d2 = (car.x - px) ** 2 + (car.y - py) ** 2;
-      if (d2 < 95) {
-        // push the car out
-        const nx2 = (car.x - px) / (Math.sqrt(d2) || 1), ny2 = (car.y - py) / (Math.sqrt(d2) || 1);
-        car.x = px + nx2 * 10; car.y = py + ny2 * 10;
-        car.vx += nx2 * 60; car.vy += ny2 * 60;
-        car.crash = 0.1;
-        const rel = Math.abs(car.vx * nx2 + car.vy * ny2);
-        if (car.isPlayer && rel > 120) shake = Math.max(shake, Math.min(9, 3 + rel * 0.04));
-        burst(px, py, "#ffd0d0", 6, 80);
       }
     }
     // Breakables
@@ -1271,22 +1298,24 @@
       const dx = b.x - a.x, dy = b.y - a.y; const d2 = dx * dx + dy * dy; const rad = 13;
       if (d2 < rad * rad && d2 > 0.1) {
         const d = Math.sqrt(d2); const nx = dx / d, ny = dy / d; const overlap = rad - d;
-        a.x -= nx * overlap * 0.5; a.y -= ny * overlap * 0.5;
-        b.x += nx * overlap * 0.5; b.y += ny * overlap * 0.5;
+        // Split the positional overlap gently between both cars (soft, avoids jitter).
+        const push = Math.min(overlap, 3) * 0.5;
+        a.x -= nx * push; a.y -= ny * push;
+        b.x += nx * push; b.y += ny * push;
         const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
         if (rv < 0) {
-          const imp = rv * 0.55;
-          a.vx += imp * nx; a.vy += imp * ny;
-          b.vx -= imp * nx; b.vy -= imp * ny;
-          a.crash = b.crash = 0.05;
-          // bounce
-          a.bounceV = -4 + Math.random() * 3; b.bounceV = -4 + Math.random() * 3;
-          burst((a.x + b.x) / 2, (a.y + b.y) / 2, "#fff", 6, 80);
-          // Shake + crash noise ONLY when the player is hit, and only on a hard impact.
-          // Light grazes between AI (or a soft brush with the player) do NOT shake the screen.
-          const hard = Math.abs(rv) > 120;
+          // Gentle, capped impulse: cars nudge each other but never get flung.
+          const imp = Math.max(-120, Math.min(120, rv * 0.28));
+          a.vx -= imp * nx; a.vy -= imp * ny;
+          b.vx += imp * nx; b.vy += imp * ny;
+          a.crash = b.crash = 0.03;
+          // small visual bounce
+          a.bounceV = -2 + Math.random() * 2; b.bounceV = -2 + Math.random() * 2;
+          burst((a.x + b.x) / 2, (a.y + b.y) / 2, "#fff", 4, 60);
+          // Shake + crash noise ONLY for the player, and only on a hard hit (not a graze).
+          const hard = Math.abs(rv) > 150;
           if ((a.isPlayer || b.isPlayer) && hard) {
-            shake = Math.max(shake, Math.min(10, 3 + Math.abs(rv) * 0.05));
+            shake = Math.max(shake, Math.min(8, 2 + Math.abs(rv) * 0.03));
             beep(180, 0.08, "square", 0.03);
           }
         }
@@ -1438,7 +1467,6 @@
 
     // Boost pads
     for (const pad of boostPads) drawPad(ctx, pad);
-    for (const hz of hazards) if (hz.active) drawHazard(ctx, hz);
     for (const bk of breakables) if (bk.alive) { ctx.fillStyle = "#ffcc5c"; ctx.fillRect(bk.x - 4, bk.y - 3, 8, 6); }
 
     for (const s of spectators) drawSpec(ctx, s);
