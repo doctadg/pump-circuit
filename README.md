@@ -1,30 +1,35 @@
-# PUMP CIRCUIT
+# PUMP KART
 
-Polished 2D bird’s-eye arcade racer. Fast races, instant rematch, social lobby energy.
+Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 
-## What is real
+## Playable now
 
-- Arcade driving: progressive throttle, responsive braking, drift-to-boost, nitro, soft wall slides, skid / smoke / sparks / dust
-- Pre-race lobby you can mess about in
-- Track vote, random grid, live standings, spectate, podium
-- Private rooms with lobby codes, parties, horns / emotes
-- Garage cosmetics earned by playing
-- Profiles, rivals, streaks, ranks, local leaderboards, ghosts, daily / weekly challenges
-- Local 2-player on one keyboard
+- Fast eight-kart races with three laps and live position tracking
+- Responsive acceleration, braking, road-edge slowdown and soft kart contact
+- Hold-to-drift handling with a charged release boost
+- Green boost pads and floating Pump item boxes
+- Six crypto power-ups: Green Candle, Pump Rocket, Diamond Hands, Rug Pull, MEV Zap and Airdrop
+- Three distinct tracks: Pump Park, Bonding Beach and Moon Market
+- Cartoon 3D karts, Pump characters, branded barriers/signage, trees, hills, buildings and track props
+- Race UI with standings, timer, item slot, map, lap counter and speed/boost display
+- Keyboard and mobile touch controls
+- Local two-player split-screen races
 
-## What is not real
+## Controls
 
-This is a **local social preview**. Online racers are personality-filled stand-ins, not a live server. No wallet, no token, no mainnet.
+- **P1:** WASD or arrows · Space/Left Shift drift · E/F item
+- **P2:** arrows · Right Shift/Numpad 0 drift · / or Numpad Enter item
+- **R:** restart race
+- **Mobile:** on-screen steering, gas, brake, drift and item buttons
 
-## Play
-
-Open `index.html` or:
+## Run locally
 
 ```bash
 python3 -m http.server 5178 --bind 0.0.0.0
 ```
 
-- **P1** WASD / arrows · Shift nitro · X drift · C horn · 1–4 emotes
-- **P2** IJKL · U nitro · M drift
-- **Enter** confirm / rematch · **R** restart · **Esc** hub
-- Mobile: on-screen GAS / BRK / steer / NITRO / HORN
+Then open <http://localhost:5178>.
+
+## Scope
+
+This is a playable local arcade build. Local multiplayer is real; online matchmaking is not represented as live. No wallet, token, or mainnet actions are included.

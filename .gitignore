@@ -1,0 +1,5 @@
+qa-*.png
+index.2d.html
+server/node_modules/
+server/build/
+.vercel/
