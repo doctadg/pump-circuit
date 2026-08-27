@@ -1,29 +1,30 @@
 # PUMP CIRCUIT
 
-Local playable prototype of a Pump.fun top-down arcade racer.
-
-Bird’s-eye pixel cars, drift, collisions, nitro, 3-lap race, 8-car field, local 2P.
+Polished 2D bird’s-eye arcade racer. Fast races, instant rematch, social lobby energy.
 
 ## What is real
 
-- Driving, camera, closed circuit, AI pack, nitro pickups
-- Zones: 1000x, Launchpad, Bonding Curve, Dump, Liquidity Pool
-- HUD: position, lap, time, nitro, mini-map, standings
+- Arcade driving: drift, boost, bounce collisions, skid / smoke / sparks / dust
+- Pre-race lobby you can mess about in
+- Track vote, random grid, live standings, spectate, podium
+- Private rooms with lobby codes, parties, horns / emotes
+- Garage cosmetics earned by playing
+- Profiles, rivals, streaks, ranks, local leaderboards, ghosts, daily / weekly challenges
 - Local 2-player on one keyboard
 
 ## What is not real
 
-This is a **local preview**. No online multiplayer, no wallet, no token, no mainnet.
+This is a **local social preview**. Online racers are personality-filled stand-ins, not a live server. No wallet, no token, no mainnet.
 
 ## Play
 
-Open `index.html` or serve the folder:
+Open `index.html` or:
 
 ```bash
 python3 -m http.server 5178 --bind 0.0.0.0
 ```
 
-- **P1** WASD / arrows · Shift nitro · X drift
+- **P1** WASD / arrows · Shift nitro · X drift · C horn · 1–4 emotes
 - **P2** IJKL · U nitro · M drift
-- **2** toggle local 2P · **R** restart · **Enter** start
-- Mobile: on-screen GAS / BRK / steer / NITRO
+- **Enter** confirm / rematch · **R** restart · **Esc** hub
+- Mobile: on-screen GAS / BRK / steer / NITRO / HORN
