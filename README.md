@@ -4,7 +4,7 @@ Polished 2D bird’s-eye arcade racer. Fast races, instant rematch, social lobby
 
 ## What is real
 
-- Arcade driving: drift, boost, bounce collisions, skid / smoke / sparks / dust
+- Arcade driving: progressive throttle, responsive braking, drift-to-boost, nitro, soft wall slides, skid / smoke / sparks / dust
 - Pre-race lobby you can mess about in
 - Track vote, random grid, live standings, spectate, podium
 - Private rooms with lobby codes, parties, horns / emotes
