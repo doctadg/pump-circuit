@@ -38,6 +38,7 @@
     #hud .banner.pink { color: #ff6b6b; }
     #hud .banner.gold { color: #fde68a; }
     #hud .banner.cyan { color: #67e8f9; }
+    #hud .banner.red { color: #ff4040; }
     #hud .leader {
       position: absolute; top: 44px; right: 16px; font-size: 8px; line-height: 1.8; text-align: right;
       background: rgba(10,28,16,.35); padding: 6px 8px; border: 1px solid rgba(124,255,107,.35);
@@ -261,52 +262,18 @@
     [1180, 1210], [900, 1220], [620, 1220], [380, 1220],
   ];
 
-  // ---- Mario-Kart style courses ----
-  // RAINBOW ROAD — wide, sweeping, fast. Rounded loop with a gentle slalom on the south side.
+  // ---- Mario-Kart style courses (all clean closed loops, never self-cross) ----
   const RAW_RAINBOW = [
-    [380, 1200], [760, 1235], [1180, 1230], [1560, 1180],
-    [1920, 1140], [2140, 1010], [2160, 780], [2060, 560],
-    [1840, 420], [1560, 340], [1300, 400], [1120, 520],
-    [980, 660], [900, 820], [1000, 950], [1180, 1000],
-    [1380, 940], [1500, 820], [1540, 660], [1460, 520],
-    [1280, 420], [1080, 420], [880, 520], [700, 640],
-    [520, 760], [360, 900], [300, 1040], [380, 1200],
+    [1802, 700],[1808, 796],[1794, 892],[1760, 983],[1707, 1064],[1639, 1133],[1562, 1187],[1479, 1228],[1394, 1256],[1309, 1274],[1224, 1284],[1140, 1286],[1057, 1280],[974, 1265],[893, 1240],[816, 1204],[744, 1157],[681, 1098],[627, 1030],[583, 954],[551, 873],[530, 788],[520, 700],[520, 611],[531, 521],[554, 433],[591, 347],[641, 267],[704, 197],[781, 141],[866, 101],[958, 79],[1050, 75],[1140, 87],[1224, 113],[1302, 148],[1373, 189],[1440, 234],[1503, 281],[1565, 332],[1626, 388],[1684, 452],[1735, 525],[1776, 609],
   ];
-  // DOGE MINE — tight technical core, quick chicanes + sweeping return (no self-cross).
   const RAW_MINE = [
-    [380, 1200], [720, 1180], [1040, 1140], [1300, 1080],
-    [1560, 1120], [1840, 1160], [2100, 1100], [2140, 900],
-    [2000, 760], [1780, 720], [1560, 780], [1420, 900],
-    [1340, 780], [1360, 640], [1500, 560], [1660, 620],
-    [1720, 760], [1640, 900], [1460, 980], [1240, 980],
-    [1020, 920], [820, 800], [620, 720], [420, 760],
-    [280, 880], [240, 1040], [320, 1160], [380, 1200],
+    [1781, 700],[1792, 794],[1754, 880],[1679, 946],[1593, 991],[1516, 1026],[1455, 1063],[1402, 1107],[1347, 1154],[1286, 1197],[1217, 1236],[1140, 1272],[1053, 1304],[958, 1321],[863, 1306],[786, 1250],[743, 1159],[732, 1053],[738, 958],[733, 886],[699, 829],[641, 772],[581, 700],[546, 615],[550, 527],[589, 449],[646, 383],[707, 325],[767, 270],[832, 220],[905, 185],[984, 167],[1063, 165],[1140, 166],[1217, 163],[1298, 162],[1380, 174],[1453, 213],[1506, 278],[1538, 355],[1563, 428],[1600, 490],[1659, 548],[1728, 615],
   ];
-  // MOON BAY — big blobby low-grip loop.
   const RAW_MOON = [
-    [400, 1180], [800, 1240], [1260, 1230], [1700, 1190],
-    [2020, 1100], [2160, 940], [2160, 700], [2040, 520],
-    [1800, 400], [1520, 380], [1240, 460], [1020, 600],
-    [840, 760], [700, 900], [540, 940], [400, 880],
-    [320, 720], [340, 560], [480, 480], [680, 520],
-    [860, 640], [980, 800], [1120, 940], [1320, 1010],
-    [1560, 980], [1760, 900], [1880, 760], [1900, 600],
-    [1780, 460], [1560, 400], [1320, 440], [1080, 520],
-    [900, 640], [760, 800], [640, 940], [500, 1040],
-    [420, 1120], [400, 1180],
+    [1750, 700],[1755, 788],[1742, 877],[1713, 962],[1670, 1040],[1614, 1111],[1548, 1171],[1474, 1220],[1394, 1256],[1310, 1279],[1224, 1287],[1140, 1280],[1060, 1259],[986, 1225],[920, 1182],[863, 1131],[813, 1078],[768, 1022],[726, 966],[685, 908],[644, 846],[604, 777],[568, 700],[542, 614],[531, 521],[540, 426],[570, 334],[623, 252],[696, 187],[782, 143],[875, 121],[970, 120],[1059, 135],[1140, 162],[1213, 195],[1278, 230],[1340, 263],[1400, 296],[1461, 330],[1523, 368],[1584, 414],[1642, 471],[1691, 538],[1729, 615],
   ];
-  // COCO COAST — long beachy S with a hairpin at each end.
   const RAW_COAST = [
-    [400, 1200], [820, 1230], [1240, 1210], [1640, 1180],
-    [2000, 1140], [2140, 1000], [2120, 820], [1960, 720],
-    [1760, 720], [1580, 800], [1440, 920], [1320, 800],
-    [1240, 660], [1030, 600], [820, 640], [660, 760],
-    [520, 900], [360, 960], [220, 900], [200, 760],
-    [300, 640], [480, 620], [680, 680], [860, 780],
-    [1020, 880], [1220, 900], [1420, 860], [1600, 780],
-    [1800, 760], [1980, 840], [2080, 980], [2060, 1120],
-    [1900, 1180], [1660, 1160], [1400, 1140], [1120, 1140],
-    [840, 1140], [620, 1140], [460, 1160], [400, 1200],
+    [1726, 700],[1738, 786],[1730, 873],[1703, 957],[1659, 1034],[1601, 1099],[1532, 1153],[1457, 1193],[1379, 1223],[1299, 1241],[1219, 1250],[1140, 1250],[1062, 1240],[987, 1221],[916, 1191],[850, 1151],[792, 1102],[742, 1045],[700, 983],[667, 916],[641, 847],[621, 775],[606, 700],[598, 622],[597, 541],[608, 457],[631, 373],[671, 293],[726, 222],[797, 166],[878, 127],[966, 108],[1055, 110],[1140, 130],[1217, 163],[1286, 204],[1346, 249],[1400, 295],[1452, 339],[1504, 384],[1557, 432],[1609, 486],[1657, 548],[1698, 620],
   ];
 
   function catmull(p0, p1, p2, p3, t) {
@@ -358,25 +325,25 @@
     {
       name: "RAINBOW ROAD", label: "RAINBOW", desc: "Wide, sweeping, super-fast. Hold it flat out.", color: "#a855f7",
       build: () => buildTrack(RAW_RAINBOW),
-      theme: { grass: ["#2a1a3e", "#241844", "#351a52", "#1e1440", "#2c1150"], curb: "#a855f7", curb2: "#67e8f9", ground: "#2a1a3e", rainbow: true },
+      theme: { grass: ["#9ee08c", "#8fd67e", "#84cc74", "#97dc86", "#7fc86f"], curb: "#2fce6e", curb2: "#f4f7f4", ground: "#8fd67e", rainbow: true },
       mod: { speed: 1.18, boost: 1.5, grip: 0.95 },
     },
     {
       name: "DOGE MINE", label: "MINE", desc: "Tight tech switchbacks. Precision or bust.", color: "#fb923c",
       build: () => buildTrack(RAW_MINE),
-      theme: { grass: ["#8a5a2b", "#7a4e25", "#94622f", "#6f4520", "#9a6a34"], curb: "#fb923c", curb2: "#3b2a16", ground: "#7a4e25" },
+      theme: { grass: ["#9ee08c", "#8fd67e", "#84cc74", "#97dc86", "#7fc86f"], curb: "#2fce6e", curb2: "#f4f7f4", ground: "#8fd67e" },
       mod: { grip: 0.82, speed: 0.96 },
     },
     {
       name: "MOON BAY", label: "MOON", desc: "Low-grip lunar loop. Easy to slide, hard to win.", color: "#67e8f9",
       build: () => buildTrack(RAW_MOON),
-      theme: { grass: ["#1a2733", "#16202c", "#20303c", "#141c28", "#263844"], curb: "#67e8f9", curb2: "#93c5fd", ground: "#1a2733" },
+      theme: { grass: ["#9ee08c", "#8fd67e", "#84cc74", "#97dc86", "#7fc86f"], curb: "#2fce6e", curb2: "#f4f7f4", ground: "#8fd67e" },
       mod: { grip: 0.6, speed: 1.06 },
     },
     {
       name: "COCO COAST", label: "COAST", desc: "Beachy S. Boost pads everywhere, keep it loose.", color: "#fde68a",
       build: () => buildTrack(RAW_COAST),
-      theme: { grass: ["#9ed47e", "#93c86f", "#a6dd88", "#88bd63", "#b0e49a"], curb: "#fde68a", curb2: "#2dd4bf", ground: "#9ed47e" },
+      theme: { grass: ["#9ee08c", "#8fd67e", "#84cc74", "#97dc86", "#7fc86f"], curb: "#2fce6e", curb2: "#f4f7f4", ground: "#8fd67e" },
       mod: { boost: 1.4, grip: 0.9 },
     },
   ];
@@ -956,8 +923,7 @@
         const py = sy + Math.floor(k / 4) * 11 + ((k * 3) % 3);
         if (inStand(px, py)) continue;
         spectators.push({
-          x: px, y: py,
-          hat: k % 3 === 0, bounce: 0, sway: Math.random() * 10, hold: k % 5 === 2 ? EMOJIS[k % EMOJIS.length] : (k % 7 === 4 ? "👏" : null),
+          x: px, y: py, hat: k % 3 === 0, bounce: 0, sway: Math.random() * 10, hold: k % 5 === 2 ? EMOJIS[k % EMOJIS.length] : (k % 7 === 4 ? "👏" : null), alive: true, onTrack: false,
         });
       }
     }
@@ -965,9 +931,18 @@
     for (const gs of grandstands) {
       const frontY = gs.y + gs.h + 4;
       for (let px = gs.x + 6; px < gs.x + gs.w - 6; px += 9) {
-        spectators.push({ x: px, y: frontY + ((px * 3) % 4), hat: (px / 9 | 0) % 3 === 0, bounce: 0, sway: Math.random() * 10, hold: null });
+        spectators.push({ x: px, y: frontY + ((px * 3) % 4), hat: (px / 9 | 0) % 3 === 0, bounce: 0, sway: Math.random() * 10, hold: null, alive: true, onTrack: false });
       }
     }
+    // Stray "run-over-able" fans standing right ON the racing surface (a light weight feature).
+    // A few per track sit just off the racing line so you can intentionally mow them down for the fun/blood.
+    [0.11, 0.31, 0.49, 0.63, 0.79].forEach((t, k) => {
+      const i = Math.floor(t * T.PN) % T.PN;
+      const side = (k % 2 ? 1 : -1) * (T.HALF - 12);
+      const x = T.PATH[i][0] + T.TANG[i][1] * side;
+      const y = T.PATH[i][1] - T.TANG[i][0] * side;
+      spectators.push({ x, y, hat: k % 2 === 0, bounce: 0, sway: Math.random() * 10, hold: k % 3 === 1 ? "🙌" : null, alive: true, onTrack: true });
+    });
   }
 
   // ---- Pickups / boost pads / hazards ----
@@ -981,8 +956,8 @@
       const i = Math.floor(t * T.PN) % T.PN; const side = k % 2 ? -20 : 20;
       pickups.push({ x: T.PATH[i][0] + T.TANG[i][1] * side, y: T.PATH[i][1] - T.TANG[i][0] * side, alive: true, t: 0 });
     });
-    // Boost pads at a couple straightaways
-    [[0.16, 1], [0.55, 1], [0.72, 1]].forEach(([t, side]) => {
+    // Boost pads on several straights (simple green chevron pads)
+    [[0.10, 1], [0.22, 1], [0.36, 1], [0.55, 1], [0.68, 1], [0.82, 1], [0.92, 1]].forEach(([t, side]) => {
       const i = Math.floor(t * T.PN) % T.PN;
       boostPads.push({ x: T.PATH[i][0] + T.TANG[i][1] * (T.HALF - 20) * -side, y: T.PATH[i][1] - T.TANG[i][0] * (T.HALF - 20) * -side, ang: Math.atan2(T.TANG[i][1], T.TANG[i][0]), t: 0 });
     });
@@ -1298,19 +1273,19 @@
       const dx = b.x - a.x, dy = b.y - a.y; const d2 = dx * dx + dy * dy; const rad = 13;
       if (d2 < rad * rad && d2 > 0.1) {
         const d = Math.sqrt(d2); const nx = dx / d, ny = dy / d; const overlap = rad - d;
-        // Split the positional overlap gently between both cars (soft, avoids jitter).
-        const push = Math.min(overlap, 3) * 0.5;
+        // Gentle positional separation (small max so cars never get bumped far apart).
+        const push = Math.min(overlap, 1.6) * 0.5;
         a.x -= nx * push; a.y -= ny * push;
         b.x += nx * push; b.y += ny * push;
         const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
         if (rv < 0) {
           // Gentle, capped impulse: cars nudge each other but never get flung.
-          const imp = Math.max(-120, Math.min(120, rv * 0.28));
+          const imp = Math.max(-85, Math.min(85, rv * 0.22));
           a.vx -= imp * nx; a.vy -= imp * ny;
           b.vx += imp * nx; b.vy += imp * ny;
           a.crash = b.crash = 0.03;
           // small visual bounce
-          a.bounceV = -2 + Math.random() * 2; b.bounceV = -2 + Math.random() * 2;
+          a.bounceV = -1.5 + Math.random() * 1.5; b.bounceV = -1.5 + Math.random() * 1.5;
           burst((a.x + b.x) / 2, (a.y + b.y) / 2, "#fff", 4, 60);
           // Shake + crash noise ONLY for the player, and only on a hard hit (not a graze).
           const hard = Math.abs(rv) > 150;
@@ -1329,11 +1304,29 @@
     for (const p of pickups) p.t += dt;
     if (pickups.every((p) => !p.alive)) spawnPickupsOnly();
     for (const s of spectators) {
+      if (!s.alive) continue;
+      // Run-overable fans ON the track: hit a fan, it dies with a blood splash and you wear it.
+      if (s.onTrack) {
+        let hit = false;
+        for (const c of cars) {
+          if ((c.x - s.x) ** 2 + (c.y - s.y) ** 2 < 15 * 15) {
+            s.alive = false; hit = true;
+            c.blood = (c.blood || 0) + 0.25;
+            burst(s.x, s.y, "#c22", 9, 100);
+            burst(s.x, s.y, "#e33", 6, 140);
+            if (c.isPlayer) showBanner("SPLAT!", "red", 1200);
+            break;
+          }
+        }
+        if (hit) continue;
+      }
       let near = false;
       for (const c of cars) if ((c.x - s.x) ** 2 + (c.y - s.y) ** 2 < 100 * 100) { near = true; break; }
       s.bounce = near ? Math.abs(Math.sin(raceTime * 16)) * 3 : 0;
       s.sway += dt;
     }
+    // fade blood off cars slowly
+    for (const c of cars) c.blood = Math.max(0, (c.blood || 0) - dt * 0.08);
   }
   function spawnPickupsOnly() {
     pickups = [];
@@ -1389,6 +1382,18 @@
     g.fillRect(2, -4, 5, 8);
     g.fillStyle = "#fff6c8";
     g.fillRect(8, -4, 2, 2); g.fillRect(8, 2, 2, 2);
+    // Blood splatter when you've run over fans (grows then fades)
+    if (car.blood > 0.02) {
+      const b = Math.min(1, car.blood);
+      g.fillStyle = `rgba(190,28,28,${0.5 + b * 0.5})`;
+      g.beginPath();
+      g.arc(-2, -1, 3 + b * 4, 0, Math.PI * 2);
+      g.fill();
+      for (let i = 0; i < 3; i++) {
+        const a = i * 2.1 + car.id;
+        g.fillRect(Math.cos(a) * (4 + b * 3) - 1, Math.sin(a) * (4 + b * 3) - 1, 2 + b * 2, 2 + b * 2);
+      }
+    }
     g.fillStyle = "#1a1a1a";
     const woff = car.drift * 1.5;
     g.fillRect(-7, -7, 5, 2); g.fillRect(-7, 5, 5, 2);
@@ -1404,6 +1409,14 @@
   }
 
   function drawSpec(g, s) {
+    if (s.onTrack) {
+      // Run-overable fan standing on the track — bright shirt so players notice them.
+      g.fillStyle = "#e8f4ea"; g.fillRect(s.x - 2, s.y - 6 - s.bounce, 5, 5);
+      g.fillStyle = "#ff8c42"; g.fillRect(s.x - 2, s.y - 1 - s.bounce, 5, 6);
+      if (s.hat) { g.fillStyle = "#16301c"; g.fillRect(s.x - 3, s.y - 8 - s.bounce, 7, 2); }
+      if (s.hold) { g.fillStyle = "#fff"; g.font = "6px monospace"; g.textAlign = "center"; g.fillText(s.hold, s.x, s.y - 8 - s.bounce); }
+      return;
+    }
     g.fillStyle = "#e8f4ea"; g.fillRect(s.x - 2, s.y - 6 - s.bounce, 5, 5);
     g.fillStyle = "#2fce6e"; g.fillRect(s.x - 2, s.y - 1 - s.bounce, 5, 6);
     if (s.hat) { g.fillStyle = "#16301c"; g.fillRect(s.x - 3, s.y - 8 - s.bounce, 7, 2); }
@@ -1413,8 +1426,11 @@
   function drawPad(g, pad) {
     const cos = Math.cos(pad.ang), sin = Math.sin(pad.ang);
     g.save(); g.translate(pad.x, pad.y); g.rotate(pad.ang);
-    g.fillStyle = "#2dd4bf"; g.fillRect(-20, -8, 40, 16);
-    g.fillStyle = "#99f6e4"; g.fillRect(-16, -5, 10, 4); g.fillRect(2, -5, 10, 4);
+    g.fillStyle = "#2fce6e"; g.fillRect(-20, -8, 40, 16);
+    g.fillStyle = "#f4f7f4"; g.fillRect(-14, -5, 8, 4); g.fillRect(2, -5, 8, 4);
+    // chevron pointing forward
+    g.fillStyle = "#0f3d20";
+    g.beginPath(); g.moveTo(14, -5); g.lineTo(20, 0); g.lineTo(14, 5); g.lineTo(11, 5); g.lineTo(17, 0); g.lineTo(11, -5); g.closePath(); g.fill();
     g.restore();
   }
   function drawHazard(g, hz) {
@@ -1467,9 +1483,9 @@
 
     // Boost pads
     for (const pad of boostPads) drawPad(ctx, pad);
-    for (const bk of breakables) if (bk.alive) { ctx.fillStyle = "#ffcc5c"; ctx.fillRect(bk.x - 4, bk.y - 3, 8, 6); }
+    for (const bk of breakables) if (bk.alive) { ctx.fillStyle = "#2fce6e"; ctx.fillRect(bk.x - 4, bk.y - 3, 8, 6); ctx.fillStyle = "#f4f7f4"; ctx.fillRect(bk.x - 4, bk.y - 1, 8, 2); }
 
-    for (const s of spectators) drawSpec(ctx, s);
+    for (const s of spectators) if (s.alive) drawSpec(ctx, s);
     for (const p of pickups) { if (!p.alive) continue; drawPill(ctx, p.x, p.y + Math.sin(p.t * 6) * 2, p.t, false); }
     for (const p of particles) {
       ctx.globalAlpha = Math.max(0, p.life / p.max);
