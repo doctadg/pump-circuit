@@ -8,6 +8,8 @@ const ITEM_POINTS = [0.09, 0.24, 0.405, 0.59, 0.755, 0.91];
 const BOOST_POINTS = [0.17, 0.51, 0.84];
 const ITEM_HIT_METERS = 4.5;
 const BOOST_HIT_METERS = 6;
+const KART_CONTACT_LENGTH = 3.55;
+const KART_CONTACT_WIDTH = 2.75;
 const ITEMS = ["candle", "rocket", "diamond", "rug", "mev", "airdrop"];
 const ALLOWED_INPUT_KEYS = new Set(["gas", "brake", "left", "right", "drift", "seq"]);
 
@@ -31,6 +33,8 @@ interface RuntimeState {
   itemLock: number;
   aiLane: number;
   aiPhase: number;
+  laneVel: number;
+  bumpLane: number;
 }
 
 function blankInput(): InputState {
@@ -67,6 +71,10 @@ function modularDelta(a: number, b: number): number {
   if (delta > 0.5) delta -= 1;
   if (delta < -0.5) delta += 1;
   return delta;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 export class PumpKartRoom extends Room<{ state: PumpKartState }> {
@@ -166,6 +174,7 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
       input: blankInput(), steerInput: 0, headingOffset: 0, driftCharge: 0,
       lastS: player.s || 0.98, padLock: 0, itemLock: 0,
       aiLane: (slot % 2 ? 1 : -1) * (1.4 + (slot % 3)), aiPhase: slot * 1.71,
+      laneVel: 0, bumpLane: 0,
     };
   }
 
@@ -332,19 +341,26 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
     const maxHeading = drifting ? (humanHandling ? 0.62 : 0.5) : (humanHandling ? 0.36 : 0.25);
     runtime.headingOffset = Math.max(-maxHeading, Math.min(maxHeading, runtime.headingOffset));
     const lateralGrip = humanHandling ? (drifting ? 0.94 : 0.86) : 0.68;
+    runtime.bumpLane *= Math.exp(-7.5 * dt);
     const lateralSpeed = player.speed * Math.sin(runtime.headingOffset) * lateralGrip;
-    player.lane += lateralSpeed * dt;
+    runtime.laneVel = lateralSpeed + runtime.bumpLane;
+    player.lane += runtime.laneVel * dt;
     const softEdge = 17 * 0.55;
     const hardEdge = 17 * 0.64;
     if (Math.abs(player.lane) > softEdge) {
       const over = Math.min(1, (Math.abs(player.lane) - softEdge) / (hardEdge - softEdge));
-      runtime.headingOffset += -Math.sign(player.lane) * (1.7 + over * 3.8) * dt;
-      player.speed += (0 - player.speed) * Math.min(1, (0.45 + over * 1.2) * dt);
+      runtime.headingOffset += -Math.sign(player.lane) * (1.7 + over * 3.2) * dt;
+      player.speed += (0 - player.speed) * Math.min(1, (0.36 + over * 0.9) * dt);
     }
     if (Math.abs(player.lane) > hardEdge) {
-      player.lane = Math.sign(player.lane) * hardEdge;
-      runtime.headingOffset = -Math.sign(player.lane) * Math.min(0.18, Math.abs(runtime.headingOffset) * 0.45);
-      player.speed *= 0.82;
+      const side = Math.sign(player.lane) || 1;
+      const outwardSpeed = Math.max(0, runtime.laneVel * side);
+      const penetration = Math.abs(player.lane) - hardEdge;
+      player.lane = side * hardEdge;
+      runtime.bumpLane = -side * Math.max(1.8, outwardSpeed * 0.42 + penetration * 2.5);
+      runtime.laneVel = runtime.bumpLane;
+      runtime.headingOffset = clamp(runtime.headingOffset - side * Math.min(0.18, 0.055 + Math.abs(player.speed) * 0.002), -0.68, 0.68);
+      player.speed *= clamp(0.96 - outwardSpeed * 0.004, 0.84, 0.96);
     }
 
     const forwardSpeed = player.speed * Math.max(0.5, Math.cos(runtime.headingOffset));
@@ -384,11 +400,52 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
     const players = [...this.state.players.values()];
     for (let i = 0; i < players.length; i++) for (let j = i + 1; j < players.length; j++) {
       const a = players[i], b = players[j];
-      if (Math.abs(modularDelta(a.s, b.s)) * TRACK_LENGTHS[this.state.track] < 2.8 && Math.abs(a.lane - b.lane) < 1.8) {
-        const direction = a.lane <= b.lane ? -1 : 1;
-        a.lane += direction * 0.028;
-        b.lane -= direction * 0.028;
-      }
+      const runtimeA = this.runtime.get(a.sessionId), runtimeB = this.runtime.get(b.sessionId);
+      if (!runtimeA || !runtimeB) continue;
+      const trackLength = TRACK_LENGTHS[this.state.track];
+      const along = modularDelta(a.s, b.s) * trackLength;
+      const side = a.lane - b.lane;
+      const ex = along / KART_CONTACT_LENGTH;
+      const ey = side / KART_CONTACT_WIDTH;
+      const distance = Math.hypot(ex, ey);
+      if (distance >= 1) continue;
+
+      let ux: number, uy: number;
+      if (distance < 1e-6) { ux = 0; uy = a.sessionId <= b.sessionId ? -1 : 1; }
+      else { ux = ex / distance; uy = ey / distance; }
+      const correction = 1 - distance + 0.006;
+      const correctionAlong = ux * correction * KART_CONTACT_LENGTH;
+      const correctionSide = uy * correction * KART_CONTACT_WIDTH;
+      a.s = (a.s + correctionAlong * 0.5 / trackLength + 1) % 1;
+      b.s = (b.s - correctionAlong * 0.5 / trackLength + 1) % 1;
+      a.lane += correctionSide * 0.5;
+      b.lane -= correctionSide * 0.5;
+
+      let nx = along / (KART_CONTACT_LENGTH * KART_CONTACT_LENGTH);
+      let ny = side / (KART_CONTACT_WIDTH * KART_CONTACT_WIDTH);
+      const normalLength = Math.hypot(nx, ny);
+      if (normalLength < 1e-6) { nx = ux; ny = uy; }
+      else { nx /= normalLength; ny /= normalLength; }
+      const relativeAlong = a.speed - b.speed;
+      const relativeSide = runtimeA.laneVel - runtimeB.laneVel;
+      const closingSpeed = relativeAlong * nx + relativeSide * ny;
+      if (closingSpeed >= -0.05) continue;
+
+      const impulse = -(1 + 0.18) * closingSpeed * 0.5;
+      const tx = -ny, ty = nx;
+      const tangentSpeed = relativeAlong * tx + relativeSide * ty;
+      const frictionLimit = impulse * 0.24;
+      const tangentImpulse = clamp(-tangentSpeed * 0.5, -frictionLimit, frictionLimit);
+      const impulseAlong = impulse * nx + tangentImpulse * tx;
+      const impulseSide = impulse * ny + tangentImpulse * ty;
+      a.speed = clamp(a.speed + impulseAlong, -12, 78);
+      b.speed = clamp(b.speed - impulseAlong, -12, 78);
+      runtimeA.bumpLane = clamp(runtimeA.bumpLane + impulseSide, -12, 12);
+      runtimeB.bumpLane = clamp(runtimeB.bumpLane - impulseSide, -12, 12);
+      runtimeA.laneVel = clamp(runtimeA.laneVel + impulseSide, -14, 14);
+      runtimeB.laneVel = clamp(runtimeB.laneVel - impulseSide, -14, 14);
+      runtimeA.headingOffset = clamp(runtimeA.headingOffset + impulseSide / Math.max(10, Math.abs(a.speed)) * 0.18, -0.68, 0.68);
+      runtimeB.headingOffset = clamp(runtimeB.headingOffset - impulseSide / Math.max(10, Math.abs(b.speed)) * 0.18, -0.68, 0.68);
     }
   }
 

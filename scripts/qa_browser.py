@@ -92,14 +92,14 @@ def main() -> None:
     wait_until(cdp, '!!window.__pumpKart')
     wait_until(cdp, 'window.__pumpKart.freeAssetCount===31', timeout=30)
 
-    report: dict = {'tracks': [], 'boxPickup': {}, 'crateStress': {}, 'camera': {}, 'steering': {}, 'viewport': {}, 'errors': []}
+    report: dict = {'tracks': [], 'boxPickup': {}, 'crateStress': {}, 'camera': {}, 'collision': {}, 'steering': {}, 'viewport': {}, 'errors': []}
     track_names = ['pump-park', 'bonding-beach', 'moon-market']
     focus_s = [0.34, 0.40, 0.31]
     for idx, name in enumerate(track_names):
         cdp.evaluate(f'window.__pumpKart.startRaceNow({idx},1); true')
         wait_until(cdp, "window.__pumpKart.mode==='race'", timeout=30)
         if idx == 0:
-            report['camera'] = cdp.evaluate("({fov:window.__pumpKart.cameraPose.fov,position:window.__pumpKart.cameraPose.position,fxDrawCalls:window.__pumpKart.microFxDrawCalls,version:window.__pumpKart.version})")
+            report['camera'] = cdp.evaluate("({fov:window.__pumpKart.cameraPose.fov,position:window.__pumpKart.cameraPose.position,kartScale:window.__pumpKart.kartScale,fxDrawCalls:window.__pumpKart.microFxDrawCalls,version:window.__pumpKart.version})")
             cdp.evaluate('window.__pumpKart.stressPickups(500);true')
             time.sleep(.15)
             report['crateStress'] = cdp.evaluate("({alive:true,fx:window.__pumpKart.microFxCount,fxDrawCalls:window.__pumpKart.microFxDrawCalls,errors:window.__pumpKart.errors})")
@@ -111,6 +111,11 @@ def main() -> None:
         info = cdp.evaluate("({name:window.__pumpKart.track.name,animations:window.__pumpKart.worldAnimations,freeAssets:window.__pumpKart.freeAssetCount,scenery:window.__pumpKart.sceneryObjects,music:window.__pumpKart.musicReady,errors:window.__pumpKart.errors})")
         cdp.screenshot(OUT / f'qa-world-{name}.png')
         report['tracks'].append(info)
+
+    # Rear-end contract: transfer forward momentum, never eject both karts sideways.
+    cdp.evaluate('window.__pumpKart.startRaceNow(0,1);true')
+    cdp.evaluate("(()=>{const rs=window.__pumpKart.racers;rs.slice(2).forEach((r,i)=>Object.assign(r,{finished:true,s:.5+i*.03,lane:6}));Object.assign(rs[0],{finished:true,s:.3,lane:0,speed:35,laneVel:0,bumpLane:0});Object.assign(rs[1],{finished:true,s:.303,lane:0,speed:10,laneVel:0,bumpLane:0});window.__pumpKart.resolveContacts();return true})()")
+    report['collision'] = cdp.evaluate("(()=>{const [rear,front]=window.__pumpKart.racers;let ds=Math.abs(rear.s-front.s);if(ds>.5)ds=1-ds;return{rear:{s:rear.s,lane:rear.lane,speed:rear.speed,bumpLane:rear.bumpLane},front:{s:front.s,lane:front.lane,speed:front.speed,bumpLane:front.bumpLane},separation:ds*window.__pumpKart.trackLength,errors:window.__pumpKart.errors}})()")
 
     # Direction contract regression: D and A must produce opposite intended turns.
     cdp.evaluate('window.__pumpKart.startRaceNow(0,1);true')
@@ -162,8 +167,10 @@ def main() -> None:
         raise SystemExit('item box microinteraction regression')
     if not report['crateStress']['alive'] or report['crateStress']['fx'] > 66 or report['crateStress']['fxDrawCalls'] != 3 or report['crateStress']['errors']:
         raise SystemExit('item box performance regression')
-    if report['camera']['fov'] != 58 or report['camera']['fxDrawCalls'] != 3 or report['camera']['version'] != 'pump-kart-camera-pools-v9':
+    if report['camera']['fov'] != 58 or report['camera']['kartScale'] != .64 or report['camera']['fxDrawCalls'] != 3 or report['camera']['version'] != 'pump-kart-compact-physics-v10':
         raise SystemExit('fixed chase camera regression')
+    if report['collision']['rear']['speed'] >= 35 or report['collision']['front']['speed'] <= 10 or abs(report['collision']['rear']['lane']) > .05 or abs(report['collision']['front']['lane']) > .05 or report['collision']['separation'] < 3.5 or report['collision']['errors']:
+        raise SystemExit('kart collision physics regression')
     if report['viewport']['scroll'][0] > report['viewport']['inner'][0]:
         raise SystemExit('mobile horizontal overflow')
     if after_d['lane'] >= before_d['lane'] or after_a['lane'] <= before_a['lane']:

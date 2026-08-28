@@ -117,6 +117,38 @@ describe("PumpKartRoom authoritative multiplayer", () => {
     assert.ok(player.heading > 0.25, `full right should produce a visible turn angle, got ${player.heading}`);
   });
 
+  it("resolves rear-end and side contacts with directional impulses", async () => {
+    const { room, client } = await connect({ name: "BUMPER", kart: 0 });
+    client.send("start", {});
+    await settle(client, 50);
+    room.state.phase = "race";
+    const players = [...room.state.players.values()];
+    const rear = players[0], front = players[1];
+    for (let i = 2; i < players.length; i++) { players[i].s = 0.55 + i * 0.03; players[i].lane = 7; }
+    const internals = room as any;
+    const rearRuntime = internals.runtime.get(rear.sessionId);
+    const frontRuntime = internals.runtime.get(front.sessionId);
+
+    rear.s = 0.3; rear.lane = 0; rear.speed = 35;
+    front.s = 0.303; front.lane = 0; front.speed = 10;
+    Object.assign(rearRuntime, { laneVel: 0, bumpLane: 0, headingOffset: 0 });
+    Object.assign(frontRuntime, { laneVel: 0, bumpLane: 0, headingOffset: 0 });
+    internals.resolveContacts();
+    assert.ok(rear.speed < 35, "rear kart should give up forward momentum");
+    assert.ok(front.speed > 10, "front kart should receive forward momentum");
+    assert.ok(Math.abs(rear.lane) < 0.05 && Math.abs(front.lane) < 0.05, "rear-end contact must not eject karts sideways");
+    let progressGap = Math.abs(rear.s - front.s); if (progressGap > 0.5) progressGap = 1 - progressGap;
+    assert.ok(progressGap * 822 >= 3.5, "rear-end overlap should resolve in one authoritative step");
+
+    rear.s = front.s = 0.4; rear.lane = 0; front.lane = 2.3; rear.speed = front.speed = 24;
+    Object.assign(rearRuntime, { laneVel: 7, bumpLane: 0, headingOffset: 0 });
+    Object.assign(frontRuntime, { laneVel: 0, bumpLane: 0, headingOffset: 0 });
+    internals.resolveContacts();
+    assert.ok(rearRuntime.bumpLane < 0 && frontRuntime.bumpLane > 0, "side-swipe should push each kart away from contact");
+    assert.ok(front.lane - rear.lane >= 2.7, "side overlap should be fully separated");
+    assert.ok(Math.abs(rear.speed - front.speed) < 3, "side-swipe should not invent a rear-end speed transfer");
+  });
+
   it("keeps item assignment and use authoritative", async () => {
     const { room, client } = await connect({ name: "ITEMS", kart: 0 });
     client.send("start", {});
