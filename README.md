@@ -16,7 +16,8 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 - Fixed over-the-kart chase camera matching the intended party-racer POV while following the kart's real world heading
 - Fully manual spline-relative driving: track curves no longer rotate the player, forward progress follows the kart's actual heading, missed turns run wide, and wall riding cannot complete a race
 - Smoothed steering input, chassis yaw, tire-grip travel direction, kart pose and chase-camera yaw produce progressive turn-in, readable slip and controlled countersteer instead of snapping
-- Physics runs in fine substeps and drops oversized hitch time rather than teleporting the kart across a turn after a slow frame
+- Physics runs in fine substeps and caps oversized hitch time rather than teleporting the kart across a turn after a slow frame
+- Adaptive render scaling, cached track/minimap sampling, instanced item boxes and distance-culling keep dense tracks smooth on desktop and mobile
 - Instanced, hard-capped micro-FX pools keep crate pickups at three draw calls instead of allocating dozens of meshes and materials per hit
 - Karts and drivers run at 64% of the original world scale so eight racers have clear passing room without losing silhouette readability
 - Elliptical kart contacts use penetration correction, directional momentum transfer, side-swipe impulses, contact friction and controlled wall rebound in both local and authoritative multiplayer simulation
@@ -27,7 +28,8 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 - Track-specific worlds with dense animated surroundings: Pump Park grandstands/plaza/ferris wheel/blimp, Bonding Beach lighthouse/pier/sailboats/cabanas, and Moon Market launch complex/lunar base/neon bazaar
 - 31 frozen CC0 Kenney 3D models across race infrastructure, vehicles, vegetation, beach props and space scenery
 - Poly Haven CC0 PBR asphalt, grass, coastal sand and lunar surfaces with local diffuse/normal/roughness maps
-- Soft dynamic shadows on karts and modeled scenery, plus over 100 placed environment objects per track
+- Lightweight shadow-free lighting and textured local surfaces keep over 100 environment objects per track affordable
+- Full in-race menu with resume, restart, smooth/sharp graphics, sound, controls and exit-to-home actions
 - Original high-energy Pump Kart Grand Prix music plus layered engine audio, tire scrub, boost airflow, impact synthesis and sampled boost/item effects
 - Race UI with standings, timer, item slot, map, lap counter and speed/boost display
 - Keyboard and mobile touch controls
@@ -41,7 +43,8 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 - **P1:** W/S accelerate and brake · A turns left · D turns right · arrows also steer · Space/Left Shift drift · E/F item
 - **P2:** arrows · Right Shift/Numpad 0 drift · / or Numpad Enter item
 - **R:** restart race
-- **Mobile:** on-screen steering, gas, brake, drift and item buttons
+- **Esc / MENU:** open the in-race menu
+- **Mobile:** on-screen steering, gas, brake, drift, item and menu buttons
 
 ## Run locally
 
