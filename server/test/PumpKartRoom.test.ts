@@ -83,6 +83,24 @@ describe("PumpKartRoom authoritative multiplayer", () => {
     assert.ok(Math.abs(player.lane) <= 10.88, "lane is server bounded");
   });
 
+  it("gives human racers decisive steering authority", async () => {
+    const { room, client } = await connect({ name: "TURNER", kart: 0 });
+    client.send("start", {});
+    await settle(client, 50);
+    room.state.phase = "race";
+
+    const player = room.state.players.get(client.sessionId)!;
+    player.lane = 0;
+    player.speed = 45;
+    const inputMessage = room.waitForMessage("input");
+    client.send("input", { gas: true, right: true, left: false, brake: false, drift: false, seq: 1 });
+    await inputMessage;
+    await new Promise((resolve) => setTimeout(resolve, 650));
+
+    assert.ok(player.lane > 4.5, `full right should move decisively across the track, got ${player.lane}`);
+    assert.ok(player.heading > 0.25, `full right should produce a visible turn angle, got ${player.heading}`);
+  });
+
   it("keeps item assignment and use authoritative", async () => {
     const { room, client } = await connect({ name: "ITEMS", kart: 0 });
     client.send("start", {});

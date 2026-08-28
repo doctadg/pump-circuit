@@ -301,15 +301,18 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
       player.speed += (0 - player.speed) * Math.min(1, drag * dt / Math.max(1, Math.abs(player.speed)));
     }
 
-    const steeringResponse = Math.abs(steer) > Math.abs(runtime.steerInput) ? 10.5 : 13;
+    const humanHandling = !player.bot;
+    const steeringResponse = Math.abs(steer) > Math.abs(runtime.steerInput) ? (humanHandling ? 12.5 : 10.5) : 13;
     runtime.steerInput += (steer - runtime.steerInput) * Math.min(1, steeringResponse * dt);
     const speedRatio = Math.min(1, Math.abs(player.speed) / Math.max(1, maxBase));
     const direction = player.speed >= 0 ? 1 : -1;
     const drifting = input.drift && Math.abs(runtime.steerInput) > 0.12 && Math.abs(player.speed) > 17;
     if (drifting) {
       runtime.driftCharge = Math.min(1.7, runtime.driftCharge + dt * (0.52 + Math.abs(runtime.steerInput) * 0.62));
-      runtime.headingOffset += runtime.steerInput * direction * (0.92 + speedRatio * 0.72) * dt;
-      runtime.headingOffset += (runtime.steerInput * 0.34 - runtime.headingOffset) * Math.min(1, 0.92 * TRACK_GRIP[track] * dt);
+      const driftTurn = humanHandling ? 1.18 + speedRatio * 0.92 : 0.92 + speedRatio * 0.72;
+      const driftAngle = humanHandling ? 0.46 : 0.34;
+      runtime.headingOffset += runtime.steerInput * direction * driftTurn * dt;
+      runtime.headingOffset += (runtime.steerInput * driftAngle - runtime.headingOffset) * Math.min(1, 0.92 * TRACK_GRIP[track] * dt);
     } else {
       if (player.drifting && runtime.driftCharge > 0.24) {
         player.boost = Math.max(player.boost, 0.34 + Math.min(0.68, runtime.driftCharge * 0.38));
@@ -317,15 +320,17 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
         this.broadcast("event", { type: "driftBoost", sessionId: player.sessionId });
       }
       runtime.driftCharge = 0;
-      runtime.headingOffset += runtime.steerInput * direction * (0.72 + speedRatio * 0.58) * dt;
-      const alignRate = (Math.abs(runtime.steerInput) > 0.08 ? 3.6 : 6.4) * TRACK_GRIP[track];
+      const gripTurn = humanHandling ? 0.98 + speedRatio * 0.82 : 0.72 + speedRatio * 0.58;
+      runtime.headingOffset += runtime.steerInput * direction * gripTurn * dt;
+      const alignRate = (Math.abs(runtime.steerInput) > 0.08 ? (humanHandling ? 2.75 : 3.6) : 6.4) * TRACK_GRIP[track];
       runtime.headingOffset += (0 - runtime.headingOffset) * Math.min(1, alignRate * dt);
     }
     player.drifting = drifting;
 
-    const maxHeading = drifting ? 0.5 : 0.25;
+    const maxHeading = drifting ? (humanHandling ? 0.62 : 0.5) : (humanHandling ? 0.36 : 0.25);
     runtime.headingOffset = Math.max(-maxHeading, Math.min(maxHeading, runtime.headingOffset));
-    const lateralSpeed = player.speed * Math.sin(runtime.headingOffset) * 0.68;
+    const lateralGrip = humanHandling ? (drifting ? 0.94 : 0.86) : 0.68;
+    const lateralSpeed = player.speed * Math.sin(runtime.headingOffset) * lateralGrip;
     player.lane += lateralSpeed * dt;
     const softEdge = 17 * 0.55;
     const hardEdge = 17 * 0.64;

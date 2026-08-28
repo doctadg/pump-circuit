@@ -5,7 +5,7 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 ## Playable now
 
 - Fast eight-kart races with three laps and live position tracking
-- Directional kart steering with camera-follow yaw, speed-sensitive turn authority and road-edge recovery
+- High-authority directional steering with quicker turn-in, stronger lateral grip, camera-follow yaw and road-edge recovery
 - Reverse gear, drift-hop initiation, stable drift arcs, charged release boosts and perfect launches
 - Green boost pads and floating Pump item boxes
 - Six crypto power-ups: Green Candle, Pump Rocket, Diamond Hands, Rug Pull, MEV Zap and Airdrop
