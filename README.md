@@ -12,8 +12,8 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 - Three distinct tracks: Pump Park, Bonding Beach and Moon Market
 - Detailed 3D karts with sidepods, fenders, rims, spoilers, exhausts and Pump branding
 - Distinct Pump racers including Whale, Ape, Dev, Bot, Diamond Hands, Chad and Jeet silhouettes
-- Track-specific worlds: Pump Park grandstands/city, Bonding Beach water/surf props, Moon Market craters/candles/stars
-- Layered engine audio, tire scrub, boost airflow, impact synthesis and sampled boost/item effects
+- Track-specific worlds with dense animated surroundings: Pump Park grandstands/plaza/ferris wheel/blimp, Bonding Beach lighthouse/pier/sailboats/cabanas, and Moon Market launch complex/lunar base/neon bazaar
+- Original high-energy Pump Kart Grand Prix music plus layered engine audio, tire scrub, boost airflow, impact synthesis and sampled boost/item effects
 - Race UI with standings, timer, item slot, map, lap counter and speed/boost display
 - Keyboard and mobile touch controls
 - Local two-player split-screen races
@@ -23,7 +23,7 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 
 ## Controls
 
-- **P1:** WASD or arrows · Space/Left Shift drift · E/F item
+- **P1:** W/S accelerate and brake · A turns left · D turns right · arrows also steer · Space/Left Shift drift · E/F item
 - **P2:** arrows · Right Shift/Numpad 0 drift · / or Numpad Enter item
 - **R:** restart race
 - **Mobile:** on-screen steering, gas, brake, drift and item buttons
