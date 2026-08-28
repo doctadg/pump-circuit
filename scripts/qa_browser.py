@@ -92,12 +92,16 @@ def main() -> None:
     wait_until(cdp, '!!window.__pumpKart')
     wait_until(cdp, 'window.__pumpKart.freeAssetCount===31', timeout=30)
 
-    report: dict = {'tracks': [], 'steering': {}, 'viewport': {}, 'errors': []}
+    report: dict = {'tracks': [], 'boxPickup': {}, 'steering': {}, 'viewport': {}, 'errors': []}
     track_names = ['pump-park', 'bonding-beach', 'moon-market']
     focus_s = [0.34, 0.40, 0.31]
     for idx, name in enumerate(track_names):
         cdp.evaluate(f'window.__pumpKart.startRace({idx},1); true')
         wait_until(cdp, "window.__pumpKart.mode==='race'", timeout=30)
+        if idx == 0:
+            cdp.evaluate("Object.assign(window.__pumpKart.racers[0],{s:.0948,lane:0,speed:0,item:null,roulette:0,boxLock:0});true")
+            time.sleep(.35)
+            report['boxPickup'] = cdp.evaluate("(()=>{const r=window.__pumpKart.racers[0];return {roulette:r.roulette,item:r.item?.id||null,boxLock:r.boxLock}})()")
         cdp.evaluate(f'window.__pumpKart.racers[0].s={focus_s[idx]};window.__pumpKart.racers[0].speed=0;true')
         time.sleep(0.9)
         info = cdp.evaluate("({name:window.__pumpKart.track.name,animations:window.__pumpKart.worldAnimations,freeAssets:window.__pumpKart.freeAssetCount,scenery:window.__pumpKart.sceneryObjects,music:window.__pumpKart.musicReady,errors:window.__pumpKart.errors})")
@@ -150,6 +154,8 @@ def main() -> None:
         raise SystemExit('music did not play')
     if not all(t['freeAssets'] == 31 and t['scenery'] >= 100 for t in report['tracks']):
         raise SystemExit('free asset scenery incomplete')
+    if report['boxPickup']['roulette'] <= 0 and not report['boxPickup']['item']:
+        raise SystemExit('item box pickup regression')
     if report['viewport']['scroll'][0] > report['viewport']['inner'][0]:
         raise SystemExit('mobile horizontal overflow')
     if after_d['lane'] >= before_d['lane'] or after_a['lane'] <= before_a['lane']:

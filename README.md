@@ -8,6 +8,7 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 - High-authority directional steering with quicker turn-in, stronger lateral grip, camera-follow yaw and road-edge recovery
 - Reverse gear, drift-hop initiation, stable drift arcs, charged release boosts and perfect launches
 - Green boost pads and floating Pump item boxes
+- Forgiving full-size collision zones for item boxes and boost pads, with immediate pickup feedback in solo and online races
 - Six crypto power-ups: Green Candle, Pump Rocket, Diamond Hands, Rug Pull, MEV Zap and Airdrop
 - Three distinct tracks: Pump Park, Bonding Beach and Moon Market
 - Detailed 3D karts with sidepods, fenders, rims, spoilers, exhausts and Pump branding

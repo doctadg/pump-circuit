@@ -6,6 +6,8 @@ const TRACK_MAX_SPEED = [47, 52, 49];
 const TRACK_GRIP = [1, 0.98, 0.88];
 const ITEM_POINTS = [0.09, 0.24, 0.405, 0.59, 0.755, 0.91];
 const BOOST_POINTS = [0.17, 0.51, 0.84];
+const ITEM_HIT_METERS = 4.5;
+const BOOST_HIT_METERS = 6;
 const ITEMS = ["candle", "rocket", "diamond", "rug", "mev", "airdrop"];
 const ALLOWED_INPUT_KEYS = new Set(["gas", "brake", "left", "right", "drift", "seq"]);
 
@@ -362,14 +364,14 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
     }
     runtime.lastS = player.s;
 
-    if (!player.item && runtime.itemLock <= 0 && ITEM_POINTS.some((point) => Math.abs(modularDelta(player.s, point)) < 0.0035)) {
+    if (!player.item && runtime.itemLock <= 0 && ITEM_POINTS.some((point) => Math.abs(modularDelta(player.s, point)) * TRACK_LENGTHS[track] < ITEM_HIT_METERS)) {
       const rank = this.rankOf(player);
       const pool = rank >= 5 ? ["rocket", "rocket", "candle", "diamond", "airdrop"] : ITEMS;
       player.item = pool[Math.floor(Math.random() * pool.length)];
       runtime.itemLock = 1.2;
       this.broadcast("event", { type: "item", sessionId: player.sessionId, item: player.item });
     }
-    if (runtime.padLock <= 0 && BOOST_POINTS.some((point) => Math.abs(modularDelta(player.s, point)) < 0.0038)) {
+    if (runtime.padLock <= 0 && BOOST_POINTS.some((point) => Math.abs(modularDelta(player.s, point)) * TRACK_LENGTHS[track] < BOOST_HIT_METERS)) {
       player.boost = Math.max(player.boost, 1.05);
       player.speed = Math.min(maxBase * 1.3, player.speed + 10);
       runtime.padLock = 0.8;

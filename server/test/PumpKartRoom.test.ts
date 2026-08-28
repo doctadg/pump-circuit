@@ -83,6 +83,22 @@ describe("PumpKartRoom authoritative multiplayer", () => {
     assert.ok(Math.abs(player.lane) <= 10.88, "lane is server bounded");
   });
 
+  it("collects an item box across the full visible kart-box overlap", async () => {
+    const { room, client } = await connect({ name: "BOXTEST", kart: 0 });
+    client.send("start", {});
+    await settle(client, 50);
+    room.state.phase = "race";
+
+    const player = room.state.players.get(client.sessionId)!;
+    player.s = 0.0948; // ~4m past the 0.09 box center: the kart and box still visibly overlap.
+    player.lane = 0;
+    player.speed = 0;
+    player.item = "";
+    await room.waitForNextTimestep();
+
+    assert.notEqual(player.item, "", "visible contact with an item box should award an item");
+  });
+
   it("gives human racers decisive steering authority", async () => {
     const { room, client } = await connect({ name: "TURNER", kart: 0 });
     client.send("start", {});
