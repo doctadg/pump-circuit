@@ -13,6 +13,9 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 - Detailed 3D karts with sidepods, fenders, rims, spoilers, exhausts and Pump branding
 - Distinct Pump racers including Whale, Ape, Dev, Bot, Diamond Hands, Chad and Jeet silhouettes
 - Track-specific worlds with dense animated surroundings: Pump Park grandstands/plaza/ferris wheel/blimp, Bonding Beach lighthouse/pier/sailboats/cabanas, and Moon Market launch complex/lunar base/neon bazaar
+- 31 frozen CC0 Kenney 3D models across race infrastructure, vehicles, vegetation, beach props and space scenery
+- Poly Haven CC0 PBR asphalt, grass, coastal sand and lunar surfaces with local diffuse/normal/roughness maps
+- Soft dynamic shadows on karts and modeled scenery, plus over 100 placed environment objects per track
 - Original high-energy Pump Kart Grand Prix music plus layered engine audio, tire scrub, boost airflow, impact synthesis and sampled boost/item effects
 - Race UI with standings, timer, item slot, map, lap counter and speed/boost display
 - Keyboard and mobile touch controls
@@ -41,3 +44,5 @@ Run the multiplayer service separately from `server/` with `npm start`; the web 
 ## Scope
 
 This is a playable arcade build with real local and online multiplayer. No wallet, token, or mainnet actions are included.
+
+Third-party CC0 provenance and source URLs are recorded in [`assets/free/SOURCES.md`](assets/free/SOURCES.md).

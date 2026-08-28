@@ -90,22 +90,23 @@ def main() -> None:
     set_viewport(cdp, 1440, 900)
     cdp.send('Page.navigate', {'url': APP})
     wait_until(cdp, '!!window.__pumpKart')
+    wait_until(cdp, 'window.__pumpKart.freeAssetCount===31', timeout=30)
 
     report: dict = {'tracks': [], 'steering': {}, 'viewport': {}, 'errors': []}
     track_names = ['pump-park', 'bonding-beach', 'moon-market']
     focus_s = [0.34, 0.40, 0.31]
     for idx, name in enumerate(track_names):
         cdp.evaluate(f'window.__pumpKart.startRace({idx},1); true')
-        time.sleep(4.25)
+        wait_until(cdp, "window.__pumpKart.mode==='race'", timeout=30)
         cdp.evaluate(f'window.__pumpKart.racers[0].s={focus_s[idx]};window.__pumpKart.racers[0].speed=0;true')
         time.sleep(0.9)
-        info = cdp.evaluate("({name:window.__pumpKart.track.name,animations:window.__pumpKart.worldAnimations,music:window.__pumpKart.musicReady,errors:window.__pumpKart.errors})")
+        info = cdp.evaluate("({name:window.__pumpKart.track.name,animations:window.__pumpKart.worldAnimations,freeAssets:window.__pumpKart.freeAssetCount,scenery:window.__pumpKart.sceneryObjects,music:window.__pumpKart.musicReady,errors:window.__pumpKart.errors})")
         cdp.screenshot(OUT / f'qa-world-{name}.png')
         report['tracks'].append(info)
 
     # Direction contract regression: D and A must produce opposite intended turns.
     cdp.evaluate('window.__pumpKart.startRace(0,1);true')
-    time.sleep(4.1)
+    wait_until(cdp, "window.__pumpKart.mode==='race'", timeout=30)
     key(cdp, 'KeyW', True)
     time.sleep(0.5)
     before_d = cdp.evaluate('({lane:window.__pumpKart.racers[0].lane,heading:window.__pumpKart.racers[0].headingOffset})')
@@ -124,7 +125,7 @@ def main() -> None:
 
     set_viewport(cdp, 390, 844, True)
     cdp.evaluate('window.__pumpKart.startRace(1,1);true')
-    time.sleep(4.25)
+    wait_until(cdp, "window.__pumpKart.mode==='race'", timeout=30)
     cdp.evaluate('window.__pumpKart.racers[0].s=.42;window.__pumpKart.racers[0].speed=28;true')
     time.sleep(0.8)
     report['viewport'] = cdp.evaluate("({inner:[innerWidth,innerHeight],scroll:[document.documentElement.scrollWidth,document.documentElement.scrollHeight],music:window.__pumpKart.musicReady,errors:window.__pumpKart.errors})")
@@ -147,6 +148,8 @@ def main() -> None:
         raise SystemExit(2)
     if not all(t['music'] for t in report['tracks']):
         raise SystemExit('music did not play')
+    if not all(t['freeAssets'] == 31 and t['scenery'] >= 100 for t in report['tracks']):
+        raise SystemExit('free asset scenery incomplete')
     if report['viewport']['scroll'][0] > report['viewport']['inner'][0]:
         raise SystemExit('mobile horizontal overflow')
     if after_d['lane'] >= before_d['lane'] or after_a['lane'] <= before_a['lane']:
