@@ -83,6 +83,22 @@ describe("PumpKartRoom authoritative multiplayer", () => {
     assert.ok(Math.abs(player.lane) <= 10.88, "lane is server bounded");
   });
 
+  it("does not rotate a throttle-only player with the track spline", async () => {
+    const { room, client } = await connect({ name: "MANUAL", kart: 0 });
+    client.send("start", {});
+    await settle(client, 50);
+    room.state.phase = "race";
+    const player = room.state.players.get(client.sessionId)!;
+    const internals = room as any;
+    const runtime = internals.runtime.get(client.sessionId);
+    runtime.input = { gas: true, brake: false, left: false, right: false, drift: false, seq: 1, at: Date.now() + 10_000 };
+    const startLane = player.lane;
+    for (let i = 0; i < 240; i++) internals.stepPlayer(player, 1 / 60);
+    assert.ok(Math.abs(player.lane - startLane) > 1 || Math.abs(player.heading) > 0.25, "the road should turn away when the user refuses to steer");
+    assert.equal(player.finished, false, "holding throttle alone must not finish the race");
+    assert.ok(Math.abs(player.lane) <= 10.88, "a missed corner should remain safely bounded");
+  });
+
   it("collects an item box across the full visible kart-box overlap", async () => {
     const { room, client } = await connect({ name: "BOXTEST", kart: 0 });
     client.send("start", {});
@@ -113,7 +129,7 @@ describe("PumpKartRoom authoritative multiplayer", () => {
     await inputMessage;
     await new Promise((resolve) => setTimeout(resolve, 650));
 
-    assert.ok(player.lane > 4.5, `full right should move decisively across the track, got ${player.lane}`);
+    assert.ok(player.lane > 3, `full right should move decisively beyond one compact-kart width, got ${player.lane}`);
     assert.ok(player.heading > 0.25, `full right should produce a visible turn angle, got ${player.heading}`);
   });
 

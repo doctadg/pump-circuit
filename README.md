@@ -12,8 +12,10 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 - Premium item-box sequence with proximity attraction, layered 3D glass/pill geometry, impact shell, shards, light burst, screen flash, timed roulette ticks, custom SVG reveal and ready/use states
 - Distinct world VFX for all six power-ups, boost pads, drift sparks, shield pulses, impacts, laps and finishes
 - Fully custom non-emoji racer badges and power-up iconography
-- Kart suspension pitch, chassis roll, visible front-wheel steering, camera boost kick, touch haptics and safe-area-aware mobile controls
-- Fixed over-the-kart chase camera matching the intended party-racer POV across speed, drift and boost states
+- Kart suspension pitch, chassis roll, visible front-wheel steering, touch haptics and safe-area-aware mobile controls
+- Fixed over-the-kart chase camera matching the intended party-racer POV while following the kart's real world heading
+- Fully manual spline-relative driving: track curves no longer rotate the player, forward progress follows the kart's actual heading, missed turns run wide, and wall riding cannot complete a race
+- Smoothed steering input and yaw velocity produce progressive turn-in and controlled countersteer instead of snapping
 - Instanced, hard-capped micro-FX pools keep crate pickups at three draw calls instead of allocating dozens of meshes and materials per hit
 - Karts and drivers run at 64% of the original world scale so eight racers have clear passing room without losing silhouette readability
 - Elliptical kart contacts use penetration correction, directional momentum transfer, side-swipe impulses, contact friction and controlled wall rebound in both local and authoritative multiplayer simulation

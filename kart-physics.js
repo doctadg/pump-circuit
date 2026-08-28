@@ -5,6 +5,39 @@ export const KART_CONTACT_WIDTH = 2.75;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const wrap01 = value => (value % 1 + 1) % 1;
 
+export function wrapAngle(angle) {
+  return Math.atan2(Math.sin(angle), Math.cos(angle));
+}
+
+export function angleDelta(a, b) {
+  return wrapAngle(a - b);
+}
+
+export function ensureWorldHeading(racer, trackYaw) {
+  if (!Number.isFinite(racer.worldYaw)) racer.worldYaw = wrapAngle(trackYaw + (racer.headingOffset || 0));
+  racer.headingOffset = angleDelta(racer.worldYaw, trackYaw);
+  return racer.worldYaw;
+}
+
+export function applyManualSteering(racer, trackYaw, steerInput, speedRatio, direction, dt, drifting = false) {
+  ensureWorldHeading(racer, trackYaw);
+  const authority = 0.18 + 0.82 * clamp(speedRatio, 0, 1);
+  const maxYawRate = (drifting ? 2.18 : 1.72) * authority;
+  const targetYawRate = clamp(steerInput, -1, 1) * (direction >= 0 ? 1 : -1) * maxYawRate;
+  const response = drifting ? 5.8 : 8.6;
+  racer.yawRate = (racer.yawRate || 0) + (targetYawRate - (racer.yawRate || 0)) * Math.min(1, response * dt);
+  racer.worldYaw = wrapAngle(racer.worldYaw + racer.yawRate * dt);
+  racer.headingOffset = angleDelta(racer.worldYaw, trackYaw);
+  return racer.headingOffset;
+}
+
+export function trackRelativeVelocity(speed, headingOffset, lateralGrip = 1) {
+  return {
+    forward: speed * Math.cos(headingOffset),
+    lateral: speed * Math.sin(headingOffset) * lateralGrip,
+  };
+}
+
 export function modularProgressDelta(a, b) {
   let delta = a - b;
   if (delta > 0.5) delta -= 1;
@@ -82,8 +115,12 @@ export function resolveKartPair(a, b, trackLength, options = {}) {
 
     const aSpeed = Math.max(10, Math.abs(a.speed));
     const bSpeed = Math.max(10, Math.abs(b.speed));
-    a.headingOffset = clamp((a.headingOffset || 0) + impulseSide / aSpeed * 0.18, -0.68, 0.68);
-    b.headingOffset = clamp((b.headingOffset || 0) - impulseSide / bSpeed * 0.18, -0.68, 0.68);
+    const aTurn = clamp(impulseSide / aSpeed * 0.18, -0.14, 0.14);
+    const bTurn = clamp(-impulseSide / bSpeed * 0.18, -0.14, 0.14);
+    a.headingOffset = angleDelta((a.headingOffset || 0) + aTurn, 0);
+    b.headingOffset = angleDelta((b.headingOffset || 0) + bTurn, 0);
+    if (Number.isFinite(a.worldYaw)) a.worldYaw = wrapAngle(a.worldYaw + aTurn);
+    if (Number.isFinite(b.worldYaw)) b.worldYaw = wrapAngle(b.worldYaw + bTurn);
     impact = -closingSpeed;
   }
 
@@ -103,7 +140,9 @@ export function resolveTrackEdge(racer, roadWidth) {
   racer.lane = side * hardEdge;
   racer.bumpLane = -side * Math.max(1.8, outwardSpeed * 0.42 + penetration * 2.5);
   racer.laneVel = racer.bumpLane;
-  racer.headingOffset = clamp((racer.headingOffset || 0) - side * Math.min(0.18, 0.055 + Math.abs(racer.speed || 0) * 0.002), -0.68, 0.68);
+  const turn = -side * Math.min(0.045, 0.012 + Math.abs(racer.speed || 0) * 0.0005);
+  racer.headingOffset = angleDelta((racer.headingOffset || 0) + turn, 0);
+  if (Number.isFinite(racer.worldYaw)) racer.worldYaw = wrapAngle(racer.worldYaw + turn);
   racer.speed = (racer.speed || 0) * clamp(0.96 - outwardSpeed * 0.004, 0.84, 0.96);
   return {impact: outwardSpeed + penetration * 8, penetration, side};
 }

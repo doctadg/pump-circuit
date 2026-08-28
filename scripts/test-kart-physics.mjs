@@ -1,10 +1,33 @@
 import assert from 'node:assert/strict';
-import {KART_VISUAL_SCALE,KART_CONTACT_LENGTH,KART_CONTACT_WIDTH,resolveKartPair,resolveTrackEdge} from '../kart-physics.js';
+import {KART_VISUAL_SCALE,KART_CONTACT_LENGTH,KART_CONTACT_WIDTH,angleDelta,applyManualSteering,ensureWorldHeading,resolveKartPair,resolveTrackEdge,trackRelativeVelocity} from '../kart-physics.js';
 
 const racer=(id,overrides={})=>({id,s:.3,lane:0,speed:0,laneVel:0,bumpLane:0,headingOffset:0,...overrides});
 const trackLength=1000;
 
 assert.equal(KART_VISUAL_SCALE,.64,'kart visual scale stays deliberately compact');
+
+{
+  const kart=racer(0,{worldYaw:0,yawRate:0});
+  ensureWorldHeading(kart,0);
+  applyManualSteering(kart,.55,0,1,1,.2,false);
+  assert.equal(kart.worldYaw,0,'zero steering preserves world heading instead of following the spline');
+  assert.ok(Math.abs(angleDelta(kart.headingOffset,-.55))<1e-9,'a bending track creates heading error when the user does not steer');
+  const sideways=trackRelativeVelocity(40,Math.PI/2,.86);
+  assert.ok(Math.abs(sideways.forward)<1e-8,'a sideways kart gets no automatic forward progress');
+  assert.ok(sideways.lateral>34,'a sideways kart moves toward the track edge');
+}
+
+{
+  const kart=racer(0,{worldYaw:0,yawRate:0});
+  let previous=kart.worldYaw;
+  for(let i=0;i<12;i++){
+    applyManualSteering(kart,0,1,1,1,1/60,false);
+    assert.ok(kart.worldYaw>=previous,'held steering turns monotonically');
+    assert.ok(kart.worldYaw-previous<.04,'yaw response is smoothed rather than snapping');
+    previous=kart.worldYaw;
+  }
+  assert.ok(kart.worldYaw>.15,'held steering develops meaningful authority');
+}
 
 {
   const rear=racer(0,{s:.3,speed:35});
