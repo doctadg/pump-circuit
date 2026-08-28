@@ -198,7 +198,7 @@ def main() -> None:
         raise SystemExit('item box microinteraction regression')
     if not report['crateStress']['alive'] or report['crateStress']['fx'] > 66 or report['crateStress']['fxDrawCalls'] != 3 or report['crateStress']['errors']:
         raise SystemExit('item box performance regression')
-    if report['camera']['fov'] != 58 or report['camera']['kartScale'] != .64 or report['camera']['fxDrawCalls'] != 3 or report['camera']['version'] != 'pump-kart-smooth-handling-v12':
+    if report['camera']['fov'] != 58 or report['camera']['kartScale'] != .64 or report['camera']['fxDrawCalls'] != 3 or report['camera']['version'] != 'pump-kart-controls-v13':
         raise SystemExit('fixed chase camera regression')
     if report['collision']['rear']['speed'] >= 35 or report['collision']['front']['speed'] <= 10 or abs(report['collision']['rear']['lane']) > .05 or abs(report['collision']['front']['lane']) > .05 or report['collision']['separation'] < 3.5 or report['collision']['errors']:
         raise SystemExit('kart collision physics regression')
@@ -206,7 +206,7 @@ def main() -> None:
         raise SystemExit('throttle-only spline auto-steering regression')
     if report['viewport']['scroll'][0] > report['viewport']['inner'][0]:
         raise SystemExit('mobile horizontal overflow')
-    if after_d['lane'] <= after_a['lane'] + .5 or after_d['heading'] <= after_a['heading'] + .15:
+    if after_a['lane'] <= after_d['lane'] + .5 or after_a['heading'] <= after_d['heading'] + .15:
         raise SystemExit('A/D direction regression')
     if any((not turn['finite'] or turn['frames'] != 48 or turn['maxYawStep'] > .03 or turn['maxVisualYawStep'] > .03 or turn['maxCameraYawStep'] > .03 or turn['maxLaneStep'] > .5 or turn['maxWorldStep'] > 1.2) for turn in report['turnSmoothness'].values()):
         raise SystemExit('turn smoothing regression')
