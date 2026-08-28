@@ -101,7 +101,7 @@ def main() -> None:
         if idx == 0:
             cdp.evaluate("Object.assign(window.__pumpKart.racers[0],{s:.0948,lane:0,speed:0,item:null,roulette:0,boxLock:0});true")
             time.sleep(.35)
-            report['boxPickup'] = cdp.evaluate("(()=>{const r=window.__pumpKart.racers[0];return {roulette:r.roulette,item:r.item?.id||null,boxLock:r.boxLock}})()")
+            report['boxPickup'] = cdp.evaluate("(()=>{const r=window.__pumpKart.racers[0];return {roulette:r.roulette,item:r.item?.id||null,boxLock:r.boxLock,fx:window.__pumpKart.microFxCount,slot:document.querySelector('#itemSlot').className,svg:!!document.querySelector('#itemIcon svg'),noEmoji:!/[\\u{1F000}-\\u{1FAFF}]/u.test(document.body.innerText)}})()")
         cdp.evaluate(f'window.__pumpKart.racers[0].s={focus_s[idx]};window.__pumpKart.racers[0].speed=0;true')
         time.sleep(0.9)
         info = cdp.evaluate("({name:window.__pumpKart.track.name,animations:window.__pumpKart.worldAnimations,freeAssets:window.__pumpKart.freeAssetCount,scenery:window.__pumpKart.sceneryObjects,music:window.__pumpKart.musicReady,errors:window.__pumpKart.errors})")
@@ -154,8 +154,8 @@ def main() -> None:
         raise SystemExit('music did not play')
     if not all(t['freeAssets'] == 31 and t['scenery'] >= 100 for t in report['tracks']):
         raise SystemExit('free asset scenery incomplete')
-    if report['boxPickup']['roulette'] <= 0 and not report['boxPickup']['item']:
-        raise SystemExit('item box pickup regression')
+    if (report['boxPickup']['roulette'] <= 0 and not report['boxPickup']['item']) or report['boxPickup']['fx'] <= 0 or 'roulette' not in report['boxPickup']['slot'] or not report['boxPickup']['svg'] or not report['boxPickup']['noEmoji']:
+        raise SystemExit('item box microinteraction regression')
     if report['viewport']['scroll'][0] > report['viewport']['inner'][0]:
         raise SystemExit('mobile horizontal overflow')
     if after_d['lane'] >= before_d['lane'] or after_a['lane'] <= before_a['lane']:
