@@ -15,7 +15,6 @@ describe("PumpKartRoom authoritative multiplayer", () => {
   async function connect(options: Record<string, unknown> = {}) {
     const room = await colyseus.createRoom("pump_kart", { private: false });
     const client = await colyseus.connectTo(room, options);
-    await client.waitForInitialState();
     return { room, client };
   }
 
@@ -38,7 +37,6 @@ describe("PumpKartRoom authoritative multiplayer", () => {
   it("rejects non-host start and starts an eight-kart authoritative race for the host", async () => {
     const { room, client: host } = await connect({ name: "HOST", kart: 0 });
     const guest = await colyseus.connectTo(room, { name: "GUEST", kart: 1 });
-    await guest.waitForInitialState();
 
     const guestStart = room.waitForMessage("start");
     guest.send("start", {});
@@ -120,17 +118,19 @@ describe("PumpKartRoom authoritative multiplayer", () => {
     client.send("start", {});
     await settle(client, 50);
     room.state.phase = "race";
-
     const player = room.state.players.get(client.sessionId)!;
-    player.lane = 0;
-    player.speed = 45;
-    const inputMessage = room.waitForMessage("input");
-    client.send("input", { gas: true, right: true, left: false, brake: false, drift: false, seq: 1 });
-    await inputMessage;
-    await new Promise((resolve) => setTimeout(resolve, 650));
-
-    assert.ok(player.lane > 3, `full right should move decisively beyond one compact-kart width, got ${player.lane}`);
-    assert.ok(player.heading > 0.25, `full right should produce a visible turn angle, got ${player.heading}`);
+    const internals = room as any;
+    const runTurn = (left: boolean, right: boolean) => {
+      player.s = 0.985; player.lane = 0; player.speed = 45; player.lap = 0; player.finished = false; player.spin = 0; player.boost = 0; player.drifting = false;
+      const runtime = internals.createRuntime(player, 0);
+      runtime.input = { gas: true, right, left, brake: false, drift: false, seq: 1, at: Date.now() + 10_000 };
+      internals.runtime.set(player.sessionId, runtime);
+      for (let i = 0; i < 48; i++) internals.stepPlayer(player, 1 / 60);
+      return { lane: player.lane, heading: player.heading };
+    };
+    const rightTurn = runTurn(false, true), leftTurn = runTurn(true, false);
+    assert.ok(rightTurn.lane > leftTurn.lane + 1.5, `right steering must move right of left steering: ${rightTurn.lane} vs ${leftTurn.lane}`);
+    assert.ok(rightTurn.heading > leftTurn.heading + 0.2, `right steering must rotate clockwise relative to left: ${rightTurn.heading} vs ${leftTurn.heading}`);
   });
 
   it("resolves rear-end and side contacts with directional impulses", async () => {
@@ -185,7 +185,6 @@ describe("PumpKartRoom authoritative multiplayer", () => {
   it("migrates host ownership when the lobby host leaves", async () => {
     const { room, client: host } = await connect({ name: "HOST", kart: 0 });
     const guest = await colyseus.connectTo(room, { name: "GUEST", kart: 1 });
-    await guest.waitForInitialState();
 
     await host.leave(true);
     await settle(guest, 60);

@@ -15,7 +15,8 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 - Kart suspension pitch, chassis roll, visible front-wheel steering, touch haptics and safe-area-aware mobile controls
 - Fixed over-the-kart chase camera matching the intended party-racer POV while following the kart's real world heading
 - Fully manual spline-relative driving: track curves no longer rotate the player, forward progress follows the kart's actual heading, missed turns run wide, and wall riding cannot complete a race
-- Smoothed steering input and yaw velocity produce progressive turn-in and controlled countersteer instead of snapping
+- Smoothed steering input, chassis yaw, tire-grip travel direction, kart pose and chase-camera yaw produce progressive turn-in, readable slip and controlled countersteer instead of snapping
+- Physics runs in fine substeps and drops oversized hitch time rather than teleporting the kart across a turn after a slow frame
 - Instanced, hard-capped micro-FX pools keep crate pickups at three draw calls instead of allocating dozens of meshes and materials per hit
 - Karts and drivers run at 64% of the original world scale so eight racers have clear passing room without losing silhouette readability
 - Elliptical kart contacts use penetration correction, directional momentum transfer, side-swipe impulses, contact friction and controlled wall rebound in both local and authoritative multiplayer simulation

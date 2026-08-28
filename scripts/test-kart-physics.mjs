@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {KART_VISUAL_SCALE,KART_CONTACT_LENGTH,KART_CONTACT_WIDTH,angleDelta,applyManualSteering,ensureWorldHeading,resolveKartPair,resolveTrackEdge,trackRelativeVelocity} from '../kart-physics.js';
+import {KART_VISUAL_SCALE,KART_CONTACT_LENGTH,KART_CONTACT_WIDTH,angleDelta,applyManualSteering,ensureWorldHeading,resolveKartPair,resolveTrackEdge,smoothAngle,trackRelativeVelocity} from '../kart-physics.js';
 
 const racer=(id,overrides={})=>({id,s:.3,lane:0,speed:0,laneVel:0,bumpLane:0,headingOffset:0,...overrides});
 const trackLength=1000;
@@ -26,7 +26,14 @@ assert.equal(KART_VISUAL_SCALE,.64,'kart visual scale stays deliberately compact
     assert.ok(kart.worldYaw-previous<.04,'yaw response is smoothed rather than snapping');
     previous=kart.worldYaw;
   }
-  assert.ok(kart.worldYaw>.15,'held steering develops meaningful authority');
+  assert.ok(kart.worldYaw>.09,'held steering develops meaningful authority');
+}
+
+{
+  let travel=0;
+  for(let i=0;i<30;i++)travel=smoothAngle(travel,.7,5.8,1/60);
+  assert.ok(travel>.6&&travel<.7,'tire grip converges travel direction toward chassis heading');
+  assert.ok(smoothAngle(3.13,-3.13,8,1/60)>3.1,'angle smoothing crosses the wrap boundary without a full-spin glitch');
 }
 
 {

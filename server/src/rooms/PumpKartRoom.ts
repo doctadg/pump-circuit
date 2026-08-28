@@ -26,6 +26,7 @@ interface InputState {
   drift: boolean;
   seq: number;
   at: number;
+  steer?: number;
 }
 
 interface RuntimeState {
@@ -41,6 +42,7 @@ interface RuntimeState {
   laneVel: number;
   bumpLane: number;
   worldYaw: number;
+  velocityYaw: number;
   yawRate: number;
 }
 
@@ -229,7 +231,7 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
       lastS: player.s || 0.98, padLock: 0, itemLock: 0,
       aiLane: (slot % 2 ? 1 : -1) * (1.4 + (slot % 3)), aiPhase: slot * 1.71,
       laneVel: 0, bumpLane: 0,
-      worldYaw: trackYawAt(this.state.track, player.s), yawRate: 0,
+      worldYaw: trackYawAt(this.state.track, player.s), velocityYaw: trackYawAt(this.state.track, player.s), yawRate: 0,
     };
   }
 
@@ -344,9 +346,9 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
     let input = runtime.input;
     if (player.bot) {
       const targetLane = runtime.aiLane + Math.sin(runtime.aiPhase + this.state.raceTime * 0.33) * 1.5;
-      const aheadYaw = trackYawAt(track, player.s + 14 / TRACK_LENGTHS[track]);
-      const command = clamp(angleDelta(aheadYaw, runtime.worldYaw) * 1.65 + (targetLane - player.lane) * 0.12, -1, 1);
-      input = { gas: true, brake: false, left: command < -0.045, right: command > 0.045, drift: Math.abs(command) > 0.42 && Math.sin(player.s * Math.PI * 12 + runtime.aiPhase) > 0.35 && player.speed > 30, seq: input.seq, at: Date.now() };
+      const aheadYaw = trackYawAt(track, player.s + 20 / TRACK_LENGTHS[track]);
+      const command = clamp(angleDelta(aheadYaw, runtime.worldYaw) * 1.9 + (targetLane - player.lane) * 0.075, -1, 1), sharp = Math.abs(command), curve = Math.abs(angleDelta(aheadYaw, trackYaw)), curveLimit = track === 2 ? 0.2 : 0.28;
+      input = { gas: (sharp < 0.82 && curve < curveLimit) || player.speed < 28, brake: (sharp > 0.78 || curve > curveLimit) && player.speed > 32, left: false, right: false, steer: command, drift: sharp > 0.68 && curve < 0.32 && Math.sin(player.s * Math.PI * 12 + runtime.aiPhase) > 0.45 && player.speed > 31, seq: input.seq, at: Date.now() };
     } else if (Date.now() - input.at > 900) {
       input = blankInput();
     }
@@ -354,7 +356,7 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
     const maxBase = TRACK_MAX_SPEED[track];
     const offRoad = Math.abs(player.lane) > 17 * 0.54;
     const maxSpeed = maxBase * (player.boost > 0 ? 1.24 : 1) * (offRoad ? 0.7 : 1);
-    const steer = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+    const steer = Number.isFinite(input.steer) ? Number(input.steer) : (input.right ? 1 : 0) - (input.left ? 1 : 0);
     const acceleration = player.bot ? 28 + player.kart * 0.35 : 34;
 
     if (player.spin > 0) {
@@ -372,7 +374,7 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
     }
 
     const humanHandling = !player.bot;
-    const steeringResponse = Math.abs(steer) > Math.abs(runtime.steerInput) ? (humanHandling ? 9.2 : 8.2) : 10.5;
+    const steeringResponse = Math.abs(steer) > Math.abs(runtime.steerInput) ? (humanHandling ? 7.4 : 7) : 9.5;
     runtime.steerInput += (steer - runtime.steerInput) * Math.min(1, steeringResponse * dt);
     const speedRatio = Math.min(1, Math.abs(player.speed) / Math.max(1, maxBase));
     const direction = player.speed >= 0 ? 1 : -1;
@@ -390,16 +392,18 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
     }
     player.drifting = drifting;
 
-    const authority = 0.18 + 0.82 * speedRatio;
-    const maxYawRate = (drifting ? 2.18 : 1.72) * authority;
+    const authority = 0.22 + 0.78 * speedRatio;
+    const maxYawRate = (drifting ? 1.42 : 1.12) * authority;
     const targetYawRate = runtime.steerInput * direction * maxYawRate;
-    const yawResponse = drifting ? 5.8 : 8.6;
+    const yawResponse = drifting ? 5.2 : 7.2;
     runtime.yawRate += (targetYawRate - runtime.yawRate) * Math.min(1, yawResponse * dt);
     runtime.worldYaw = wrapAngle(runtime.worldYaw + runtime.yawRate * dt);
     runtime.headingOffset = angleDelta(runtime.worldYaw, trackYaw);
-    const lateralGrip = humanHandling ? (drifting ? 0.94 : 0.86) : 0.72;
+    const travelGrip = (drifting ? 2.2 : 6.4) * TRACK_GRIP[track];
+    runtime.velocityYaw = wrapAngle(runtime.velocityYaw + angleDelta(runtime.worldYaw, runtime.velocityYaw) * (1 - Math.exp(-travelGrip * dt)));
+    const travelHeading = angleDelta(runtime.velocityYaw, trackYaw);
     runtime.bumpLane *= Math.exp(-7.5 * dt);
-    const lateralSpeed = player.speed * Math.sin(runtime.headingOffset) * lateralGrip;
+    const lateralSpeed = player.speed * Math.sin(travelHeading);
     runtime.laneVel = lateralSpeed + runtime.bumpLane;
     player.lane += runtime.laneVel * dt;
     const softEdge = 17 * 0.55;
@@ -417,11 +421,12 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
       runtime.laneVel = runtime.bumpLane;
       const wallTurn = -side * Math.min(0.045, 0.012 + Math.abs(player.speed) * 0.0005);
       runtime.worldYaw = wrapAngle(runtime.worldYaw + wallTurn);
+      runtime.velocityYaw = wrapAngle(runtime.velocityYaw + wallTurn * 2.4);
       runtime.headingOffset = angleDelta(runtime.worldYaw, trackYaw);
       player.speed *= clamp(0.96 - outwardSpeed * 0.004, 0.84, 0.96);
     }
 
-    const forwardSpeed = player.speed * Math.cos(runtime.headingOffset);
+    const forwardSpeed = player.speed * Math.cos(angleDelta(runtime.velocityYaw, trackYaw));
     player.s = (player.s + forwardSpeed / TRACK_LENGTHS[track] * dt + 1) % 1;
     runtime.headingOffset = angleDelta(runtime.worldYaw, trackYawAt(track, player.s));
     player.heading = runtime.headingOffset;
@@ -507,6 +512,8 @@ export class PumpKartRoom extends Room<{ state: PumpKartState }> {
       const turnB = clamp(-impulseSide / Math.max(10, Math.abs(b.speed)) * 0.18, -0.14, 0.14);
       runtimeA.worldYaw = wrapAngle(runtimeA.worldYaw + turnA);
       runtimeB.worldYaw = wrapAngle(runtimeB.worldYaw + turnB);
+      runtimeA.velocityYaw = wrapAngle(runtimeA.velocityYaw + turnA * 0.55);
+      runtimeB.velocityYaw = wrapAngle(runtimeB.velocityYaw + turnB * 0.55);
       runtimeA.headingOffset = angleDelta(runtimeA.worldYaw, trackYawAt(this.state.track, a.s));
       runtimeB.headingOffset = angleDelta(runtimeB.worldYaw, trackYawAt(this.state.track, b.s));
     }

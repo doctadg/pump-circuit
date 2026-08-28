@@ -13,6 +13,11 @@ export function angleDelta(a, b) {
   return wrapAngle(a - b);
 }
 
+export function smoothAngle(current, target, response, dt) {
+  if (!Number.isFinite(current)) return wrapAngle(target);
+  return wrapAngle(current + angleDelta(target, current) * (1 - Math.exp(-Math.max(0, response) * dt)));
+}
+
 export function ensureWorldHeading(racer, trackYaw) {
   if (!Number.isFinite(racer.worldYaw)) racer.worldYaw = wrapAngle(trackYaw + (racer.headingOffset || 0));
   racer.headingOffset = angleDelta(racer.worldYaw, trackYaw);
@@ -21,10 +26,10 @@ export function ensureWorldHeading(racer, trackYaw) {
 
 export function applyManualSteering(racer, trackYaw, steerInput, speedRatio, direction, dt, drifting = false) {
   ensureWorldHeading(racer, trackYaw);
-  const authority = 0.18 + 0.82 * clamp(speedRatio, 0, 1);
-  const maxYawRate = (drifting ? 2.18 : 1.72) * authority;
+  const authority = 0.22 + 0.78 * clamp(speedRatio, 0, 1);
+  const maxYawRate = (drifting ? 1.42 : 1.12) * authority;
   const targetYawRate = clamp(steerInput, -1, 1) * (direction >= 0 ? 1 : -1) * maxYawRate;
-  const response = drifting ? 5.8 : 8.6;
+  const response = drifting ? 5.2 : 7.2;
   racer.yawRate = (racer.yawRate || 0) + (targetYawRate - (racer.yawRate || 0)) * Math.min(1, response * dt);
   racer.worldYaw = wrapAngle(racer.worldYaw + racer.yawRate * dt);
   racer.headingOffset = angleDelta(racer.worldYaw, trackYaw);
@@ -121,6 +126,8 @@ export function resolveKartPair(a, b, trackLength, options = {}) {
     b.headingOffset = angleDelta((b.headingOffset || 0) + bTurn, 0);
     if (Number.isFinite(a.worldYaw)) a.worldYaw = wrapAngle(a.worldYaw + aTurn);
     if (Number.isFinite(b.worldYaw)) b.worldYaw = wrapAngle(b.worldYaw + bTurn);
+    if (Number.isFinite(a.velocityYaw)) a.velocityYaw = wrapAngle(a.velocityYaw + aTurn * 0.55);
+    if (Number.isFinite(b.velocityYaw)) b.velocityYaw = wrapAngle(b.velocityYaw + bTurn * 0.55);
     impact = -closingSpeed;
   }
 
@@ -143,6 +150,7 @@ export function resolveTrackEdge(racer, roadWidth) {
   const turn = -side * Math.min(0.045, 0.012 + Math.abs(racer.speed || 0) * 0.0005);
   racer.headingOffset = angleDelta((racer.headingOffset || 0) + turn, 0);
   if (Number.isFinite(racer.worldYaw)) racer.worldYaw = wrapAngle(racer.worldYaw + turn);
+  if (Number.isFinite(racer.velocityYaw)) racer.velocityYaw = wrapAngle(racer.velocityYaw + turn * 2.4);
   racer.speed = (racer.speed || 0) * clamp(0.96 - outwardSpeed * 0.004, 0.84, 0.96);
   return {impact: outwardSpeed + penetration * 8, penetration, side};
 }
