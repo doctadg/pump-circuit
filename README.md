@@ -13,6 +13,8 @@ Bright, behind-the-kart 3D arcade racing rebuilt around the pump.fun world.
 - Distinct world VFX for all six power-ups, boost pads, drift sparks, shield pulses, impacts, laps and finishes
 - Fully custom non-emoji racer badges and power-up iconography
 - Kart suspension pitch, chassis roll, visible front-wheel steering, camera boost kick, touch haptics and safe-area-aware mobile controls
+- Fixed over-the-kart chase camera matching the intended party-racer POV across speed, drift and boost states
+- Instanced, hard-capped micro-FX pools keep crate pickups at three draw calls instead of allocating dozens of meshes and materials per hit
 - Six crypto power-ups: Green Candle, Pump Rocket, Diamond Hands, Rug Pull, MEV Zap and Airdrop
 - Three distinct tracks: Pump Park, Bonding Beach and Moon Market
 - Detailed 3D karts with sidepods, fenders, rims, spoilers, exhausts and Pump branding

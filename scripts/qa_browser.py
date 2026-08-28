@@ -92,13 +92,17 @@ def main() -> None:
     wait_until(cdp, '!!window.__pumpKart')
     wait_until(cdp, 'window.__pumpKart.freeAssetCount===31', timeout=30)
 
-    report: dict = {'tracks': [], 'boxPickup': {}, 'steering': {}, 'viewport': {}, 'errors': []}
+    report: dict = {'tracks': [], 'boxPickup': {}, 'crateStress': {}, 'camera': {}, 'steering': {}, 'viewport': {}, 'errors': []}
     track_names = ['pump-park', 'bonding-beach', 'moon-market']
     focus_s = [0.34, 0.40, 0.31]
     for idx, name in enumerate(track_names):
-        cdp.evaluate(f'window.__pumpKart.startRace({idx},1); true')
+        cdp.evaluate(f'window.__pumpKart.startRaceNow({idx},1); true')
         wait_until(cdp, "window.__pumpKart.mode==='race'", timeout=30)
         if idx == 0:
+            report['camera'] = cdp.evaluate("({fov:window.__pumpKart.cameraPose.fov,position:window.__pumpKart.cameraPose.position,fxDrawCalls:window.__pumpKart.microFxDrawCalls,version:window.__pumpKart.version})")
+            cdp.evaluate('window.__pumpKart.stressPickups(500);true')
+            time.sleep(.15)
+            report['crateStress'] = cdp.evaluate("({alive:true,fx:window.__pumpKart.microFxCount,fxDrawCalls:window.__pumpKart.microFxDrawCalls,errors:window.__pumpKart.errors})")
             cdp.evaluate("Object.assign(window.__pumpKart.racers[0],{s:.0948,lane:0,speed:0,item:null,roulette:0,boxLock:0});true")
             time.sleep(.35)
             report['boxPickup'] = cdp.evaluate("(()=>{const r=window.__pumpKart.racers[0];return {roulette:r.roulette,item:r.item?.id||null,boxLock:r.boxLock,fx:window.__pumpKart.microFxCount,slot:document.querySelector('#itemSlot').className,svg:!!document.querySelector('#itemIcon svg'),noEmoji:!/[\\u{1F000}-\\u{1FAFF}]/u.test(document.body.innerText)}})()")
@@ -109,7 +113,7 @@ def main() -> None:
         report['tracks'].append(info)
 
     # Direction contract regression: D and A must produce opposite intended turns.
-    cdp.evaluate('window.__pumpKart.startRace(0,1);true')
+    cdp.evaluate('window.__pumpKart.startRaceNow(0,1);true')
     wait_until(cdp, "window.__pumpKart.mode==='race'", timeout=30)
     key(cdp, 'KeyW', True)
     time.sleep(0.5)
@@ -128,7 +132,7 @@ def main() -> None:
     report['steering'] = {'beforeD': before_d, 'afterD': after_d, 'beforeA': before_a, 'afterA': after_a}
 
     set_viewport(cdp, 390, 844, True)
-    cdp.evaluate('window.__pumpKart.startRace(1,1);true')
+    cdp.evaluate('window.__pumpKart.startRaceNow(1,1);true')
     wait_until(cdp, "window.__pumpKart.mode==='race'", timeout=30)
     cdp.evaluate('window.__pumpKart.racers[0].s=.42;window.__pumpKart.racers[0].speed=28;true')
     time.sleep(0.8)
@@ -156,6 +160,10 @@ def main() -> None:
         raise SystemExit('free asset scenery incomplete')
     if (report['boxPickup']['roulette'] <= 0 and not report['boxPickup']['item']) or report['boxPickup']['fx'] <= 0 or 'roulette' not in report['boxPickup']['slot'] or not report['boxPickup']['svg'] or not report['boxPickup']['noEmoji']:
         raise SystemExit('item box microinteraction regression')
+    if not report['crateStress']['alive'] or report['crateStress']['fx'] > 66 or report['crateStress']['fxDrawCalls'] != 3 or report['crateStress']['errors']:
+        raise SystemExit('item box performance regression')
+    if report['camera']['fov'] != 58 or report['camera']['fxDrawCalls'] != 3 or report['camera']['version'] != 'pump-kart-camera-pools-v9':
+        raise SystemExit('fixed chase camera regression')
     if report['viewport']['scroll'][0] > report['viewport']['inner'][0]:
         raise SystemExit('mobile horizontal overflow')
     if after_d['lane'] >= before_d['lane'] or after_a['lane'] <= before_a['lane']:
